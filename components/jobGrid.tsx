@@ -94,19 +94,11 @@ export default function JobGrid({ data }: Props) {
       headerName: "Company",
       field: "company",
       editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: cellContents.company,
-      },
     },
     {
       headerName: "Position",
       field: "position",
       editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: cellContents.position,
-      },
     },
     {
       headerName: "Applied Date",
@@ -128,10 +120,6 @@ export default function JobGrid({ data }: Props) {
       headerName: "Status",
       field: "status",
       editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: cellContents.status,
-      },
     },
     { headerName: "Location", field: "location", editable: true },
     { headerName: "Salary", field: "salary", editable: true },
