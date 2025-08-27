@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public"]
+}
+
+model User {
+  id          String   @id @db.Uuid
+  email       String?
+  displayName String?  @map("display_name")
+  createdAt   DateTime @map("created_at")
+
+  jobs Job[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Job {
+  id               String    @id @default(uuid()) @db.Uuid
+  userid           String    @db.Uuid @map("userid")
+  company          String?
+  position         String?   
+  applicationLink  String?   @map("applicationlink")
+  status           String?   @default("Applied")
+  appliedDate      DateTime? @default(now()) @db.Date @map("applieddate")
+  location         String?   @default("undisclosed")
+  platform         String?
+  salary           String?   @default("0")
+  notes            String?   @default(" ")
+
+  user User @relation(fields: [userid], references: [id])
+  
+  @@map("jobs")
+  @@schema("public")
+}
+
+
+enum AdminRole {
+  SUPER_ADMIN
+  MODERATOR
+
+  @@schema("public")
+}
+
+model Admin {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(MODERATOR)
+
+  @@schema("public")
+}
