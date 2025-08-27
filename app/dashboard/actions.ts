@@ -15,6 +15,7 @@ import { revalidatePath } from "next/cache";
 const jobSchema = z.object({
   company: z.string().nullable().optional(),
   position: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
   applicationLink: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
   appliedDate: z.string().nullable().optional(), 
@@ -73,18 +74,18 @@ export async function createJob(data: unknown) {
       data: {
         ...jobData,
         appliedDate: appliedDate ? addOneDay(appliedDate) : null,
-        userid: user.id, // Prisma field name, mapped to userid in DB
+  userid: user.id, // Prisma field name, mapped to userid in DB
       },
     });
 
-    revalidatePath("/dashboard");
+  revalidatePath("/dashboard");
 
     return {
       success: true,
 
       data: {
         ...newJob,
-        // appliedDate: newJob.appliedDate ? newJob.appliedDate.toISOString().split('T')[0] : null,
+  // appliedDate: newJob.appliedDate ? newJob.appliedDate.toISOString().split('T')[0] : null,
         appliedDate: newJob.appliedDate ? formatDateForDisplay(newJob.appliedDate)
           : null,
       },
@@ -136,7 +137,7 @@ export async function updateJob(data: unknown) {
       },
       data: {
         ...jobData,
-        appliedDate: appliedDate ? addOneDay(appliedDate) : null,
+        appliedDate: appliedDate ? appliedDate : null,
       },
     });
 
@@ -145,7 +146,7 @@ export async function updateJob(data: unknown) {
       success: true,
       data: {
         ...updatedJob,
-        // appliedDate: updatedJob.appliedDate ? updatedJob.appliedDate.toISOString().split('T')[0] : null,
+  // appliedDate: updatedJob.appliedDate ? updatedJob.appliedDate.toISOString().split('T')[0] : null,
           appliedDate: updatedJob.appliedDate ? formatDateForDisplay(updatedJob.appliedDate) : null,
       },
     };

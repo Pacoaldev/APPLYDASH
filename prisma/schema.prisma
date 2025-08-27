@@ -1,6 +1,6 @@
-generator client {
-  provider = "prisma-client-js"
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
 
 datasource db {
   provider = "postgresql"
@@ -24,7 +24,8 @@ model Job {
   id               String    @id @default(uuid()) @db.Uuid
   userid           String    @db.Uuid @map("userid")
   company          String?
-  position         String?   
+  position         String?  
+  type             String?   @default("Remote")
   applicationLink  String?   @map("applicationlink")
   status           String?   @default("Applied")
   appliedDate      DateTime? @default(now()) @db.Date @map("applieddate")

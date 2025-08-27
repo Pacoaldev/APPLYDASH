@@ -15,6 +15,7 @@ export interface Job {
   userid: string;
   company: string | null;
   position: string | null;
+  type: string | null; // Remote, Office, Hybrid, etc.
   applicationLink: string | null;
   status: string | null; 
   appliedDate: string | null;

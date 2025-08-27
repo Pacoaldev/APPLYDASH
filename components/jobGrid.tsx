@@ -61,6 +61,7 @@ export default function JobGrid({ data }: Props) {
   const gridRef = useRef<AgGridReact<Job>>(null);
   const [rowData, setRowData] = useState<Job[]>(data);
   // Sync local state with prop data whenever it changes
+    // Synchronize local state with prop data whenever it changes
   useEffect(() => {
     setRowData(data);
   }, [data]);
@@ -101,9 +102,18 @@ export default function JobGrid({ data }: Props) {
       editable: true,
     },
     {
+      headerName: "Type",
+      field: "type",
+      editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["Remote", "Office", "Hybrid"],
+      },
+    },
+    {
       headerName: "Applied Date",
       field: "appliedDate",
-      editable: true,
+      editable: (params) => !!(params.data && params.data.id && params.data.id.toString().startsWith("temp_")),
       cellEditor: "agDateCellEditor",
       valueFormatter: (params) => {
         return params.value || "";
@@ -120,6 +130,10 @@ export default function JobGrid({ data }: Props) {
       headerName: "Status",
       field: "status",
       editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: cellContents.status,
+      },
     },
     { headerName: "Location", field: "location", editable: true },
     { headerName: "Salary", field: "salary", editable: true },
@@ -150,6 +164,7 @@ export default function JobGrid({ data }: Props) {
       id: `temp_${uuidv4()}`,
       company: "",
       position: "",
+      type: "Office", // default value
       appliedDate: todayString,
       status: "Applied",
       platform: "",
@@ -194,7 +209,9 @@ export default function JobGrid({ data }: Props) {
       return;
     }
     try {
-      const result = await createJob(rowNode.data);
+      // Ensure type is present in payload
+      const payload = { ...rowNode.data, type: rowNode.data.type || "Office" };
+      const result = await createJob(payload);
       if (result.error) {
         toast.error("Failed to save job", { description: result.error });
       } else if (result.success && result.data) {
@@ -202,7 +219,7 @@ export default function JobGrid({ data }: Props) {
         if (rowNode.data) {
           setRowData(prev => [
             ...prev.filter(j => j.id !== rowNode.data!.id),
-            result.data
+            { ...result.data, type: ("type" in result.data ? (result.data as any).type : (rowNode.data && rowNode.data.type) || "Office") }
           ]);
         }
         setTempRowId(null); // Hide Save/Cancel buttons
@@ -222,10 +239,49 @@ export default function JobGrid({ data }: Props) {
   };
 
   const onCellValueChanged = (event: CellValueChangedEvent<Job>) => {
+    // Prevent updating appliedDate for non-temp rows
+    if (event.colDef.field === "appliedDate" && !(event.data.id.toString().startsWith("temp_"))) {
+      const gridApi = gridRef.current?.api;
+      if (gridApi && originalRowData.current) {
+        gridApi.applyTransaction({ update: [{ ...event.data, appliedDate: originalRowData.current.appliedDate }] });
+      }
+      return;
+    }
+    // Always revert appliedDate to original value for non-temp rows
+    if (!event.data.id.toString().startsWith("temp_")) {
+      if (originalRowData.current && event.data.appliedDate !== originalRowData.current.appliedDate) {
+        const gridApi = gridRef.current?.api;
+        if (gridApi) {
+          gridApi.applyTransaction({ update: [{ ...event.data, appliedDate: originalRowData.current.appliedDate }] });
+        }
+      }
+    }
+    // Si es temp row, no marcar dirty
+    // If it is a temp row, do not mark as dirty
     if (event.data.id.toString().startsWith("temp_")) return;
+
+    // Si el campo cambiado es 'type' o cualquier otro editable, marcar dirty y guardar el estado original si no está
+    // If the changed field is 'type' or any other editable, mark as dirty and save the original state if not already set
     if (!dirtyRowId) {
       originalRowData.current = { ...event.data };
+      setDirtyRowId(event.data.id);
+      return;
     }
+    // Si ya está dirty, actualizar el estado original solo si el id cambió
+    // If already dirty, update the original state only if the id changed
+    if (dirtyRowId !== event.data.id) {
+      originalRowData.current = { ...event.data };
+      setDirtyRowId(event.data.id);
+      return;
+    }
+    // Si el valor de 'type' cambió, mantener dirty
+    // If the value of 'type' changed, keep dirty
+    if (event.colDef.field === "type") {
+      setDirtyRowId(event.data.id);
+      return;
+    }
+    // Para cualquier otro campo editable, mantener dirty
+    // For any other editable field, keep dirty
     setDirtyRowId(event.data.id);
   };
 
@@ -244,12 +300,31 @@ export default function JobGrid({ data }: Props) {
       return;
     }
     try {
-      const result = await updateJob(rowNode.data);
+      // Preserve only original appliedDate, use current values for other fields
+    // Preserve only the original appliedDate, use current values for other fields
+      let appliedDateValue = originalRowData.current?.appliedDate ?? rowNode.data.appliedDate;
+      if (appliedDateValue && appliedDateValue.length === 10) {
+        appliedDateValue = new Date(appliedDateValue).toISOString();
+      }
+      const updatePayload = {
+        ...rowNode.data,
+        appliedDate: appliedDateValue
+      };
+      const result = await updateJob(updatePayload);
       if (result.error) {
         toast.error("Failed to update job", { description: result.error });
       } else if (result.success && result.data) {
         toast.success("Job updated successfully!");
-        gridApi.applyTransaction({ update: [result.data] });
+        // Actualiza el estado local rowData con el valor editado
+    // Update the local rowData state with the edited value
+        if (rowNode.data) {
+          setRowData(prev => prev.map(j =>
+            j.id === rowNode.data!.id
+              ? { ...result.data, type: rowNode.data!.type }
+              : j
+          ));
+        }
+        gridApi.applyTransaction({ update: [{ ...result.data, type: rowNode.data.type }] });
         gridApi.refreshClientSideRowModel("sort");
         setDirtyRowId(null);
         originalRowData.current = null;
@@ -265,10 +340,11 @@ export default function JobGrid({ data }: Props) {
     if (!dirtyRowId || !originalRowData.current) return;
     const gridApi = gridRef.current?.api;
     if (!gridApi) return;
-    // Revert the row to its original state
-    gridApi.applyTransaction({ update: [originalRowData.current] });
-    setDirtyRowId(null);
-    originalRowData.current = null;
+  // Revert the row to its original state, ensure type is present
+    // Revert the row to its original state, ensure type is present
+  gridApi.applyTransaction({ update: [{ ...originalRowData.current, type: originalRowData.current.type || "Office" }] });
+  setDirtyRowId(null);
+  originalRowData.current = null;
   };
 
   const handleDeleteRow = async () => {
@@ -405,6 +481,7 @@ export default function JobGrid({ data }: Props) {
         </Button>
       </div>
       {/* Responsive table wrapper con altura mínima */}
+    {/* Responsive table wrapper with minimum height */}
       <div className="w-full overflow-x-auto">
         <div className="ag-theme-quartz min-w-[900px] min-h-[300px] h-[400px] sm:h-[500px]">
           <AgGridReact
