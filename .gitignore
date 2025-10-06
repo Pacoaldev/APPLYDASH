@@ -84,3 +84,17 @@ package-lock.json
 
 # Supabase local config
 supabase/
+
+# Production deployment files
+.env.production
+.env.local
+
+# Docker
+docker-compose.override.yml
+
+# Deployment logs
+deployment-logs/
+
+# Cache directories
+.turbo/
+.swc/
