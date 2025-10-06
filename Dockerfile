@@ -15,6 +15,11 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy Prisma schema first
+COPY prisma ./prisma
+
+# Copy the rest of the application
 COPY . .
 
 # Generate Prisma client
