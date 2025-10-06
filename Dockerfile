@@ -42,8 +42,12 @@ COPY --from=builder /app/.next/static ./.next/static
 
 # Copy Prisma files for migrations
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Install only production dependencies for Prisma
+RUN corepack enable pnpm && pnpm add @prisma/client prisma --prod
+
+# Generate Prisma client in production
+RUN npx prisma generate
 
 USER nextjs
 
