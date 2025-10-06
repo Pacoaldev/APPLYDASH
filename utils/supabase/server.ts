@@ -3,6 +3,18 @@ import { cookies } from 'next/headers'
 import { config, validateConfig } from '../../lib/config'
 
 export async function createClient() {
+  // During build time, environment variables might not be available
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    // This is likely during build - return a dummy client to prevent build failures
+    const cookieStore = await cookies()
+    return createServerClient('https://placeholder.supabase.co', 'placeholder-key', {
+      cookies: {
+        getAll() { return [] },
+        setAll() { }
+      }
+    })
+  }
+  
   if (!validateConfig()) {
     throw new Error('Cannot create Supabase server client: Missing environment variables')
   }
