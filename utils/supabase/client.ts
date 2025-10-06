@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { config, validateConfig } from '@/lib/config'
+import { config, validateConfig } from '../../lib/config'
 
 export function createClient() {
   if (!validateConfig()) {

@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { config, validateConfig } from '@/lib/config'
+import { config, validateConfig } from '../../lib/config'
 
 export async function createClient() {
   if (!validateConfig()) {
