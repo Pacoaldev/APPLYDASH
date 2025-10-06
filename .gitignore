@@ -68,7 +68,7 @@ Thumbs.db
 .idea/
 
 # Others
-pnpm-lock.yaml
+# pnpm-lock.yaml (needed for production deployment)
 
 # Avoid uploading credentials, local configs, and build artifacts
 
