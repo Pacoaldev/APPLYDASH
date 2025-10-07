@@ -68,11 +68,11 @@ export function NavbarDemo() {
             ) : (
               <>
                 <span className="text-blue-700 font-semibold mr-2">{user.email}</span>
+                <a href="/dashboard" className="px-4 py-2 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Dashboard</a>
                 <button onClick={handleLogout} className="px-3 py-1 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Logout</button>
               </>
             )}
             <a href="/" className="text-gray-600 hover:text-blue-700 transition">Home</a>
-            <a href="/dashboard" className="px-4 py-2 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Dashboard</a>
           </div>
         )}
         {/* Mobile Hamburger */}
@@ -93,11 +93,11 @@ export function NavbarDemo() {
           ) : (
             <>
               <span className="text-blue-700 font-semibold w-full text-center mb-2">{user.email}</span>
+              <a href="/dashboard" className="w-full px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition text-center" onClick={() => setMobileOpen(false)}>Dashboard</a>
               <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="w-full px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Logout</button>
             </>
           )}
           <a href="/" className="text-gray-600 hover:text-blue-700 transition w-full text-center py-3 rounded-xl" onClick={() => setMobileOpen(false)}>Home</a>
-          <a href="/dashboard" className="w-full px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition text-center" onClick={() => setMobileOpen(false)}>Dashboard</a>
         </div>
       )}
     </div>

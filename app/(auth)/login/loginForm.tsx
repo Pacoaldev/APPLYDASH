@@ -63,9 +63,8 @@ export default function LoginForm() {
       });
       setServerError(response.message);
     } else {
-      router.push("/dashboard");
-      // Forzar recarga para que el navbar detecte el login
-      window.location.reload();
+      // Force navigation to dashboard with full page reload to ensure proper state
+      window.location.href = "/dashboard";
     }
   } catch (error) {
     let errorMessage = "An unexpected error occurred. Please try again.";

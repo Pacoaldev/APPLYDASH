@@ -8,8 +8,13 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function LoginPage() {
-  // Don't redirect automatically - let the user complete the login process
-  // The LoginForm component will handle the redirect after successful login
+  // Check if user is already authenticated and redirect if so
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (user) {
+    redirect("/dashboard");
+  }
   
   return (
     <Suspense fallback={<div>Loading login form...</div>}>
