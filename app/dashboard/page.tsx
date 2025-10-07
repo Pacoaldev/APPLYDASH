@@ -102,8 +102,8 @@ export default async function DashboardPage() {
       <main className="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 max-w-7xl">
         <div className="text-center my-8">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-2 leading-tight">
-            Application Dashboard{' '}
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">Tracker</span>
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">ApplyDash</span>{' '}
+            Dashboard
           </h1>
         </div>
         <Suspense fallback={<JobGridSkeleton />} >
