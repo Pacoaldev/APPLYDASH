@@ -1,0 +1,29 @@
+name: applydash
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: tu-usuario/tu-repo
+    branch: main
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: DATABASE_URL
+    value: ${DATABASE_URL}
+  - key: NEXT_PUBLIC_SUPABASE_URL
+    value: ${NEXT_PUBLIC_SUPABASE_URL}
+  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+  - key: JWT_SECRET
+    value: ${JWT_SECRET}
+  - key: NEXT_PUBLIC_SITE_URL
+    value: ${NEXT_PUBLIC_SITE_URL}
+  build_command: npm run build
+databases:
+- name: applydash-db
+  engine: PG
+  version: "15"
