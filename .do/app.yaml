@@ -12,17 +12,41 @@ services:
   envs:
   - key: NODE_ENV
     value: production
+    scope: BUILD_TIME
+  - key: NODE_ENV
+    value: production
+    scope: RUN_TIME
   - key: DATABASE_URL
     value: ${DATABASE_URL}
+    scope: BUILD_TIME
+  - key: DATABASE_URL
+    value: ${DATABASE_URL}
+    scope: RUN_TIME
   - key: NEXT_PUBLIC_SUPABASE_URL
     value: ${NEXT_PUBLIC_SUPABASE_URL}
+    scope: BUILD_TIME
+  - key: NEXT_PUBLIC_SUPABASE_URL
+    value: ${NEXT_PUBLIC_SUPABASE_URL}
+    scope: RUN_TIME
   - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
     value: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    scope: BUILD_TIME
+  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    scope: RUN_TIME
   - key: JWT_SECRET
     value: ${JWT_SECRET}
+    scope: BUILD_TIME
+  - key: JWT_SECRET
+    value: ${JWT_SECRET}
+    scope: RUN_TIME
   - key: NEXT_PUBLIC_SITE_URL
     value: ${NEXT_PUBLIC_SITE_URL}
-  build_command: npm run build
+    scope: BUILD_TIME
+  - key: NEXT_PUBLIC_SITE_URL
+    value: ${NEXT_PUBLIC_SITE_URL}
+    scope: RUN_TIME
+  build_command: npm run build:do
 databases:
 - name: applydash-db
   engine: PG

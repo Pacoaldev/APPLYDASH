@@ -1,34 +1,59 @@
-// Environment variables configuration - NO HARDCODED VALUES
-export const config = {
-  supabase: {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  },
-  database: {
-    url: process.env.DATABASE_URL || ''
-  },
-  jwt: {
-    secret: process.env.JWT_SECRET || ''
-  },
-  nodeEnv: process.env.NODE_ENV || 'development'
+// Environment variables configuration with runtime detection
+function getEnvVar(key: string, fallback: string = ''): string {
+  // Try multiple sources for environment variables
+  const sources = [
+    process.env[key],
+    typeof window !== 'undefined' ? (window as any).__ENV__?.[key] : undefined,
+    // For DigitalOcean App Platform, sometimes vars are available differently
+    typeof global !== 'undefined' ? (global as any).__ENV__?.[key] : undefined
+  ];
+  
+  return sources.find(val => val !== undefined && val !== null && val !== '') || fallback;
 }
 
-// Validate required environment variables
+export const config = {
+  supabase: {
+    url: getEnvVar('NEXT_PUBLIC_SUPABASE_URL'),
+    anonKey: getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  },
+  database: {
+    url: getEnvVar('DATABASE_URL')
+  },
+  jwt: {
+    secret: getEnvVar('JWT_SECRET')
+  },
+  nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  siteUrl: getEnvVar('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000')
+}
+
+// Enhanced validation with detailed logging
 export function validateConfig(throwOnMissing = true) {
-  const missingVars = []
+  console.log('🔍 Validating environment configuration...')
   
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingVars.push('NEXT_PUBLIC_SUPABASE_URL')
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  if (!process.env.DATABASE_URL) missingVars.push('DATABASE_URL')
-  if (!process.env.JWT_SECRET) missingVars.push('JWT_SECRET')
+  // Log all available environment variables (first 10 chars only for security)
+  console.log('Available env vars:', Object.keys(process.env).filter(key => 
+    key.includes('SUPABASE') || key.includes('DATABASE') || key.includes('JWT') || key.includes('NODE_ENV')
+  ).map(key => `${key}=${process.env[key]?.substring(0, 10)}...`))
+  
+  const requiredVars = [
+    { key: 'NEXT_PUBLIC_SUPABASE_URL', value: config.supabase.url },
+    { key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY', value: config.supabase.anonKey },
+    { key: 'DATABASE_URL', value: config.database.url },
+    { key: 'JWT_SECRET', value: config.jwt.secret }
+  ]
+  
+  const missingVars = requiredVars.filter(({ value }) => !value)
   
   if (missingVars.length > 0) {
-    const message = `❌ Missing required environment variables: ${missingVars.join(', ')}`
+    const message = `❌ Missing required environment variables: ${missingVars.map(v => v.key).join(', ')}`
     console.error(message)
-    console.error('Please check your deployment environment variables configuration')
+    console.error('🔧 Debugging info:')
+    console.error('- NODE_ENV:', process.env.NODE_ENV)
+    console.error('- Platform:', process.platform)
+    console.error('- Available env keys:', Object.keys(process.env).length)
     
     if (throwOnMissing) {
-      throw new Error(`Missing environment variables: ${missingVars.join(', ')}`)
+      throw new Error(`Missing environment variables: ${missingVars.map(v => v.key).join(', ')}`)
     }
     return false
   }

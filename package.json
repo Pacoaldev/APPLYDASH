@@ -9,7 +9,8 @@
     "lint": "next lint",
     "postinstall": "prisma generate || true",
     "check-env": "node scripts/check-env.js",
-    "build:strict": "node scripts/check-env.js && next build"
+    "build:strict": "node scripts/check-env.js && next build",
+    "build:do": "echo 'Building for DigitalOcean...' && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
