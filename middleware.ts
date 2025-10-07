@@ -64,10 +64,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (user && (pathname.startsWith("/login") || pathname.startsWith("/register"))) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-
-  }
+  // Allow users to access login/register pages even if authenticated
+  // This allows them to logout and login with different accounts
+  // The forms themselves will handle the appropriate redirects after successful actions
     return supabaseResponse;
 }
 export const config = {
