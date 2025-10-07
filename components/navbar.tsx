@@ -59,20 +59,21 @@ export function NavbarDemo() {
         </div>
         {/* Desktop Navigation - only render after mount */}
         {mounted && (
-          <div className="hidden lg:flex items-center gap-6 text-base font-medium">
+          <div className="hidden lg:flex items-center gap-4 text-base font-medium">
             {!user ? (
               <>
-                <a href="/login" className="text-gray-600 hover:text-blue-700 transition">Login</a>
-                <a href="/register" className="text-gray-600 hover:text-blue-700 transition">Register</a>
+                <a href="/" className="text-gray-600 hover:text-blue-700 transition">Home</a>
+                <a href="/login" className="px-4 py-2 text-gray-600 hover:text-blue-700 transition rounded-lg hover:bg-blue-50">Login</a>
+                <a href="/register" className="px-4 py-2 text-gray-600 hover:text-blue-700 transition rounded-lg hover:bg-blue-50">Register</a>
               </>
             ) : (
               <>
-                <span className="text-blue-700 font-semibold mr-2">{user.email}</span>
-                <a href="/dashboard" className="px-4 py-2 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Dashboard</a>
-                <button onClick={handleLogout} className="px-3 py-1 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Logout</button>
+                <a href="/" className="text-gray-600 hover:text-blue-700 transition">Home</a>
+                <span className="text-blue-700 font-semibold px-3 py-2">{user.email}</span>
+                <a href="/dashboard" className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">Dashboard</a>
+                <button onClick={handleLogout} className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-red-500 to-red-700 shadow hover:scale-105 transition">Logout</button>
               </>
             )}
-            <a href="/" className="text-gray-600 hover:text-blue-700 transition">Home</a>
           </div>
         )}
         {/* Mobile Hamburger */}
