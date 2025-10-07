@@ -34,13 +34,13 @@ export function NavbarDemo() {
     try {
       await logout();
       setUser(null);
-      // Force a full page reload to clear all state
-      window.location.href = "/login";
+      // Force a full page reload to clear all state and redirect to home
+      window.location.href = "/";
     } catch (error) {
       console.error('Logout error:', error);
-      // Force logout anyway
+      // Force logout anyway and redirect to home
       setUser(null);
-      window.location.href = "/login";
+      window.location.href = "/";
     }
   };
 
