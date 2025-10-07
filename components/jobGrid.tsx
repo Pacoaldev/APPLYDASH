@@ -211,10 +211,16 @@ export default function JobGrid({ data }: Props) {
     try {
       // Ensure type is present in payload
       const payload = { ...rowNode.data, type: rowNode.data.type || "Office" };
+      console.log('🚀 Calling createJob with payload:', payload);
+      
       const result = await createJob(payload);
+      console.log('📤 createJob result:', result);
+      
       if (result.error) {
+        console.error('❌ createJob returned error:', result.error);
         toast.error("Failed to save job", { description: result.error });
       } else if (result.success && result.data) {
+        console.log('✅ Job saved successfully:', result.data);
         toast.success("Job saved successfully!");
         if (rowNode.data) {
           setRowData(prev => [
@@ -223,9 +229,13 @@ export default function JobGrid({ data }: Props) {
           ]);
         }
         setTempRowId(null); // Hide Save/Cancel buttons
+      } else {
+        console.error('❌ Unexpected result format:', result);
+        toast.error("Unexpected response format from server");
       }
     } catch (error) {
-      toast.error("An unexpected error occurred while saving." + error);
+      console.error('❌ Exception in handleSaveRow:', error);
+      toast.error("An unexpected error occurred while saving: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsSaving(false); // Ensure loading state is always turned off
     }

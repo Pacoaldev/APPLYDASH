@@ -55,44 +55,62 @@ function normalizeAppliedDate(data: unknown): Record<string, unknown> {
 }
 
 export async function createJob(data: unknown) {
+  console.log('🚀 createJob called with data:', data);
+  
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  console.log('👤 User from Supabase:', user ? 'authenticated' : 'not authenticated');
+
   if (!user) {
+    console.log('❌ No user found, returning error');
     return { error: "You must be logged in to add a job." };
   }
 
-  const validation = jobSchema.safeParse(normalizeAppliedDate(data));
+  console.log('🔍 Normalizing data...');
+  const normalizedData = normalizeAppliedDate(data);
+  console.log('📊 Normalized data:', normalizedData);
+
+  const validation = jobSchema.safeParse(normalizedData);
   if (!validation.success) {
+    console.log('❌ Validation failed:', validation.error.issues);
     return { error: "Invalid data provided. Please check the fields." };
   }
 
+  console.log('✅ Validation successful:', validation.data);
   const { appliedDate, ...jobData } = validation.data;
 
   try {
+    console.log('💾 Creating job in database...');
+    console.log('📅 Applied date:', appliedDate);
+    console.log('👤 User ID:', user.id);
+    console.log('📋 Job data:', jobData);
+
     const newJob = await prisma.job.create({
       data: {
         ...jobData,
         appliedDate: appliedDate ? addOneDay(appliedDate) : null,
-  userid: user.id, // Prisma field name, mapped to userid in DB
+        userid: user.id, // Prisma field name, mapped to userid in DB
       },
     });
 
-  revalidatePath("/dashboard");
+    console.log('✅ Job created successfully:', newJob);
 
-    return {
+    revalidatePath("/dashboard");
+
+    const result = {
       success: true,
-
       data: {
         ...newJob,
-  // appliedDate: newJob.appliedDate ? newJob.appliedDate.toISOString().split('T')[0] : null,
-        appliedDate: newJob.appliedDate ? formatDateForDisplay(newJob.appliedDate)
-          : null,
+        appliedDate: newJob.appliedDate ? formatDateForDisplay(newJob.appliedDate) : null,
       },
     };
+
+    console.log('📤 Returning result:', result);
+    return result;
   } catch (error) {
-    console.error("Failed to create job:", error);
-    return { error: "Database error: Could not save the job." };
+    console.error("❌ Failed to create job:", error);
+    return { error: `Database error: Could not save the job. ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 
