@@ -283,6 +283,52 @@ export default function DebugPage() {
           </button>
           <button 
             onClick={async () => {
+              if (confirm('⚠️ ¿Limpiar TODOS los datos de prueba? Esto borrará todos los usuarios y trabajos de prueba.')) {
+                try {
+                  console.log('🧪 Cleaning test data...');
+                  const response = await fetch('/api/clean-test-data', { method: 'POST' });
+                  const result = await response.json();
+                  console.log('📤 Clean result:', result);
+                  alert(result.success ? 
+                    `Datos de prueba limpiados!\nTrabajos eliminados: ${result.deleted.jobs}\nUsuarios de prueba eliminados: ${result.deleted.testUsers}` : 
+                    `Error: ${result.error}`
+                  );
+                } catch (error) {
+                  console.error('❌ Clean error:', error);
+                  alert(`Error limpiando datos: ${error}`);
+                }
+              }
+            }}
+            className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+          >
+            Clean Test Data
+          </button>
+          <button 
+            onClick={async () => {
+              if (confirm('🚨 ¿RESETEAR COMPLETAMENTE la base de datos? Esto borrará TODO: usuarios, trabajos y admins.')) {
+                if (confirm('🚨 ¿Estás SEGURO? Esta acción NO se puede deshacer.')) {
+                  try {
+                    console.log('🧹 Resetting database...');
+                    const response = await fetch('/api/reset-database', { method: 'POST' });
+                    const result = await response.json();
+                    console.log('📤 Reset result:', result);
+                    alert(result.success ? 
+                      `Base de datos reseteada!\nTrabajos: ${result.deleted.jobs}\nUsuarios: ${result.deleted.users}\nAdmins: ${result.deleted.admins}` : 
+                      `Error: ${result.error}`
+                    );
+                  } catch (error) {
+                    console.error('❌ Reset error:', error);
+                    alert(`Error reseteando base de datos: ${error}`);
+                  }
+                }
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            🚨 Reset Database
+          </button>
+          <button 
+            onClick={async () => {
               try {
                 const testData = {
                   company: 'Test Company',
