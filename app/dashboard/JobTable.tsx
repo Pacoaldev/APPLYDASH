@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation';
 import JobGrid from '@/components/jobGrid';
 import { getJobsForUser } from '@/lib/jobService';
 
+// Force dynamic rendering for this component
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function JobTable() {
   const supabase = await createClient();
   const {

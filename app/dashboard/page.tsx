@@ -6,6 +6,10 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // const prisma = new PrismaClient();
 
 
