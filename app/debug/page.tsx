@@ -12,7 +12,12 @@ interface ClientDiagnostics {
   timestamp: string;
   errors: string[];
   runtimeConfigAvailable: boolean;
+  windowEnvAvailable: boolean;
   envVarsFromProcess: {
+    url: string;
+    key: string;
+  };
+  windowEnv: {
     url: string;
     key: string;
   };
@@ -37,6 +42,10 @@ export default function DebugPage() {
           runtimeConfigAvailable = false;
         }
 
+        // Check window.__ENV__ availability
+        const windowEnvAvailable = typeof window !== 'undefined' && !!(window as any).__ENV__;
+        const windowEnv = windowEnvAvailable ? (window as any).__ENV__ : {};
+
         // Get client config
         const clientConfig = await getClientConfig();
 
@@ -49,9 +58,14 @@ export default function DebugPage() {
           timestamp: new Date().toISOString(),
           errors,
           runtimeConfigAvailable,
+          windowEnvAvailable,
           envVarsFromProcess: {
             url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...' || 'NOT_SET',
             key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing'
+          },
+          windowEnv: {
+            url: windowEnv.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...' || 'NOT_SET',
+            key: windowEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing'
           }
         };
         
@@ -67,7 +81,9 @@ export default function DebugPage() {
           timestamp: new Date().toISOString(),
           errors,
           runtimeConfigAvailable: false,
-          envVarsFromProcess: { url: 'ERROR', key: 'ERROR' }
+          windowEnvAvailable: false,
+          envVarsFromProcess: { url: 'ERROR', key: 'ERROR' },
+          windowEnv: { url: 'ERROR', key: 'ERROR' }
         });
       }
     };
@@ -134,6 +150,12 @@ export default function DebugPage() {
                   {diagnostics.runtimeConfigAvailable ? '✅ Available' : '⚠️ Not Available'}
                 </span>
               </div>
+              <div className="flex justify-between">
+                <span>Window.__ENV__:</span>
+                <span className={diagnostics.windowEnvAvailable ? 'text-green-600' : 'text-red-600'}>
+                  {diagnostics.windowEnvAvailable ? '✅ Available' : '❌ Missing'}
+                </span>
+              </div>
             </div>
             
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
@@ -141,6 +163,14 @@ export default function DebugPage() {
               <div className="text-sm space-y-1">
                 <div>URL: <span className="font-mono">{diagnostics.envVarsFromProcess.url}</span></div>
                 <div>Key: <span className="font-mono">{diagnostics.envVarsFromProcess.key}</span></div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+              <h3 className="font-medium text-green-800 mb-2">Window Environment (window.__ENV__):</h3>
+              <div className="text-sm space-y-1">
+                <div>URL: <span className="font-mono">{diagnostics.windowEnv.url}</span></div>
+                <div>Key: <span className="font-mono">{diagnostics.windowEnv.key}</span></div>
               </div>
             </div>
             

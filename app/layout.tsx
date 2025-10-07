@@ -28,6 +28,9 @@ export default function RootLayout({
   
   return (
     <html lang="en">
+      <head>
+        <script src="/env-config.js" async></script>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
         <ErrorBoundary>
           <ClientNavbarWrapper/>

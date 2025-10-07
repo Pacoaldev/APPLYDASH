@@ -49,6 +49,17 @@ export async function getClientConfig(): Promise<ClientConfig> {
 }
 
 export function getClientConfigSync(): ClientConfig {
+  // Try to get from window.__ENV__ first (injected during build)
+  if (typeof window !== 'undefined' && (window as any).__ENV__) {
+    const env = (window as any).__ENV__;
+    return {
+      supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL || '',
+      supabaseAnonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      siteUrl: env.NEXT_PUBLIC_SITE_URL || '',
+    };
+  }
+  
+  // Fallback to process.env
   return {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
