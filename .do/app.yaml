@@ -9,6 +9,9 @@ services:
   environment_slug: node-js
   instance_count: 1
   instance_size_slug: basic-xxs
+  domains:
+  - domain: applydash.pacoal.dev
+    type: PRIMARY
   envs:
   - key: NODE_ENV
     value: production
@@ -41,10 +44,10 @@ services:
     value: ${JWT_SECRET}
     scope: RUN_TIME
   - key: NEXT_PUBLIC_SITE_URL
-    value: ${NEXT_PUBLIC_SITE_URL}
+    value: https://applydash.pacoal.dev
     scope: BUILD_TIME
   - key: NEXT_PUBLIC_SITE_URL
-    value: ${NEXT_PUBLIC_SITE_URL}
+    value: https://applydash.pacoal.dev
     scope: RUN_TIME
   build_command: npm run build:do
 databases:
