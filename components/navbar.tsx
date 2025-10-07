@@ -31,9 +31,17 @@ export function NavbarDemo() {
   }, [supabase]);
 
   const handleLogout = async () => {
-    await logout();
-    setUser(null);
-    router.push("/login");
+    try {
+      await logout();
+      setUser(null);
+      // Force a full page reload to clear all state
+      window.location.href = "/login";
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout anyway
+      setUser(null);
+      window.location.href = "/login";
+    }
   };
 
   const [mobileOpen, setMobileOpen] = useState(false);

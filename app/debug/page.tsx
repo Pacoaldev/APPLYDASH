@@ -264,6 +264,57 @@ export default function DebugPage() {
           >
             Run Database Migration
           </button>
+          <button 
+            onClick={async () => {
+              try {
+                console.log('🔄 Syncing user...');
+                const response = await fetch('/api/sync-user', { method: 'POST' });
+                const result = await response.json();
+                console.log('📤 Sync result:', result);
+                alert(result.success ? 'Usuario sincronizado!' : `Error: ${result.error}`);
+              } catch (error) {
+                console.error('❌ Sync error:', error);
+                alert(`Error sincronizando usuario: ${error}`);
+              }
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Sync User
+          </button>
+          <button 
+            onClick={async () => {
+              try {
+                const testData = {
+                  company: 'Test Company',
+                  position: 'Test Position',
+                  type: 'Office',
+                  appliedDate: '2025-10-07',
+                  status: 'Applied',
+                  platform: 'Test Platform',
+                  location: 'Test Location',
+                  salary: '50000',
+                  notes: 'Test notes'
+                };
+                
+                console.log('🧪 Testing createJob with:', testData);
+                const response = await fetch('/api/test-create-job', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                console.log('📤 Test result:', result);
+                alert(`Test result: ${JSON.stringify(result, null, 2)}`);
+              } catch (error) {
+                console.error('❌ Test error:', error);
+                alert(`Test error: ${error}`);
+              }
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Test Create Job
+          </button>
           <a 
             href="/" 
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 inline-block"

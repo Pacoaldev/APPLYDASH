@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma"; 
 import { revalidatePath } from "next/cache";
+import { ensureUserExists } from "@/lib/userService";
 
 
 // type JobInput = {
@@ -85,6 +86,10 @@ export async function createJob(data: unknown) {
     console.log('📅 Applied date:', appliedDate);
     console.log('👤 User ID:', user.id);
     console.log('📋 Job data:', jobData);
+
+    // Ensure user exists in our database before creating job
+    console.log('🔄 Ensuring user exists in database...');
+    await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
 
     const newJob = await prisma.job.create({
       data: {
