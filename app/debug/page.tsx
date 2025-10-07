@@ -247,6 +247,23 @@ export default function DebugPage() {
           >
             Refresh Diagnostics
           </button>
+          <button 
+            onClick={async () => {
+              if (confirm('¿Ejecutar migración de base de datos? Esto creará las tablas necesarias.')) {
+                try {
+                  const response = await fetch('/api/migrate', { method: 'POST' });
+                  const result = await response.json();
+                  alert(result.success ? 'Migración exitosa!' : `Error: ${result.error}`);
+                  window.location.reload();
+                } catch (error) {
+                  alert(`Error ejecutando migración: ${error}`);
+                }
+              }
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Run Database Migration
+          </button>
           <a 
             href="/" 
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 inline-block"
