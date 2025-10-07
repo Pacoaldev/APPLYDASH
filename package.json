@@ -10,7 +10,9 @@
     "postinstall": "prisma generate || true",
     "check-env": "node scripts/check-env.js",
     "build:strict": "node scripts/check-env.js && next build",
-    "build:do": "node scripts/inject-env.js && next build"
+    "build:do": "node scripts/inject-env.js && next build",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:prod": "node scripts/migrate-production.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
