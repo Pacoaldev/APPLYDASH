@@ -30,7 +30,7 @@ export default function DebugPage() {
   useEffect(() => {
     // Client-side diagnostics
     const errors: string[] = [];
-    
+
     const runDiagnostics = async () => {
       try {
         // Check runtime config availability
@@ -68,7 +68,7 @@ export default function DebugPage() {
             key: windowEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing'
           }
         };
-        
+
         setDiagnostics(clientDiag);
       } catch (error) {
         errors.push(`Client diagnostics error: ${error}`);
@@ -114,7 +114,7 @@ export default function DebugPage() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">Application Diagnostics</h1>
-        
+
         <div className="grid gap-6 md:grid-cols-2">
           {/* Client-side Diagnostics */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -157,7 +157,7 @@ export default function DebugPage() {
                 </span>
               </div>
             </div>
-            
+
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
               <h3 className="font-medium text-blue-800 mb-2">Environment Variables (process.env):</h3>
               <div className="text-sm space-y-1">
@@ -173,7 +173,7 @@ export default function DebugPage() {
                 <div>Key: <span className="font-mono">{diagnostics.windowEnv.key}</span></div>
               </div>
             </div>
-            
+
             {diagnostics.errors.length > 0 && (
               <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
                 <h3 className="font-medium text-red-800 mb-2">Client Errors:</h3>
@@ -215,7 +215,7 @@ export default function DebugPage() {
                     {serverHealth.configValid ? '✅ Valid' : '❌ Invalid'}
                   </span>
                 </div>
-                
+
                 <details className="mt-4">
                   <summary className="cursor-pointer font-medium">Server Variables</summary>
                   <div className="mt-2 text-sm space-y-1">
@@ -241,13 +241,13 @@ export default function DebugPage() {
 
         {/* Actions */}
         <div className="mt-6 text-center space-x-4">
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Refresh Diagnostics
           </button>
-          <button 
+          <button
             onClick={async () => {
               if (confirm('¿Ejecutar migración de base de datos? Esto creará las tablas necesarias.')) {
                 try {
@@ -264,7 +264,7 @@ export default function DebugPage() {
           >
             Run Database Migration
           </button>
-          <button 
+          <button
             onClick={async () => {
               try {
                 console.log('🔄 Syncing user...');
@@ -281,7 +281,7 @@ export default function DebugPage() {
           >
             Sync User
           </button>
-          <button 
+          <button
             onClick={async () => {
               if (confirm('⚠️ ¿Limpiar TODOS los datos de prueba? Esto borrará todos los usuarios y trabajos de prueba.')) {
                 try {
@@ -289,8 +289,8 @@ export default function DebugPage() {
                   const response = await fetch('/api/clean-test-data', { method: 'POST' });
                   const result = await response.json();
                   console.log('📤 Clean result:', result);
-                  alert(result.success ? 
-                    `Datos de prueba limpiados!\nTrabajos eliminados: ${result.deleted.jobs}\nUsuarios de prueba eliminados: ${result.deleted.testUsers}` : 
+                  alert(result.success ?
+                    `Datos de prueba limpiados!\nTrabajos eliminados: ${result.deleted.jobs}\nUsuarios de prueba eliminados: ${result.deleted.testUsers}` :
                     `Error: ${result.error}`
                   );
                 } catch (error) {
@@ -303,7 +303,7 @@ export default function DebugPage() {
           >
             Clean Test Data
           </button>
-          <button 
+          <button
             onClick={async () => {
               if (confirm('🚨 ¿RESETEAR COMPLETAMENTE la base de datos? Esto borrará TODO: usuarios, trabajos y admins.')) {
                 if (confirm('🚨 ¿Estás SEGURO? Esta acción NO se puede deshacer.')) {
@@ -312,8 +312,8 @@ export default function DebugPage() {
                     const response = await fetch('/api/reset-database', { method: 'POST' });
                     const result = await response.json();
                     console.log('📤 Reset result:', result);
-                    alert(result.success ? 
-                      `Base de datos reseteada!\nTrabajos: ${result.deleted.jobs}\nUsuarios: ${result.deleted.users}\nAdmins: ${result.deleted.admins}` : 
+                    alert(result.success ?
+                      `Base de datos reseteada!\nTrabajos: ${result.deleted.jobs}\nUsuarios: ${result.deleted.users}\nAdmins: ${result.deleted.admins}` :
                       `Error: ${result.error}`
                     );
                   } catch (error) {
@@ -327,7 +327,7 @@ export default function DebugPage() {
           >
             🚨 Reset Database
           </button>
-          <button 
+          <button
             onClick={async () => {
               try {
                 const testData = {
@@ -341,14 +341,14 @@ export default function DebugPage() {
                   salary: '50000',
                   notes: 'Test notes'
                 };
-                
+
                 console.log('🧪 Testing createJob with:', testData);
                 const response = await fetch('/api/test-create-job', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(testData)
                 });
-                
+
                 const result = await response.json();
                 console.log('📤 Test result:', result);
                 alert(`Test result: ${JSON.stringify(result, null, 2)}`);
@@ -361,8 +361,8 @@ export default function DebugPage() {
           >
             Test Create Job
           </button>
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 inline-block"
           >
             Back to Home
