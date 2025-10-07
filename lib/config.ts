@@ -9,7 +9,8 @@ export const config = {
   },
   jwt: {
     secret: process.env.JWT_SECRET || ''
-  }
+  },
+  nodeEnv: process.env.NODE_ENV || 'development'
 }
 
 // Validate required environment variables

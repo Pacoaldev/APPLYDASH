@@ -6,7 +6,7 @@ async function verifyAdminToken(token?: string) {
   if (!token) return false;
   try {
     // Make sure to use the correct JWT secret from your environment variables
-    await jwtVerify(token, new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!));
+    await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET!));
     return true;
   } catch {
     return false;

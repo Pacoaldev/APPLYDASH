@@ -33,7 +33,7 @@ export async function adminLogin({ email, password }: z.infer<typeof loginSchema
       return { error: true, message: "Invalid credentials" };
     }
 
-    const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
     const token = await new SignJWT({ adminId: admin.id })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()

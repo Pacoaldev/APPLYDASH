@@ -21,7 +21,7 @@ export const forgotPassword = async ({ email }: { email: string }) => {
   }
 
   const supabase = await createClient();
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/forgot-password/reset-password`;
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://applydash-wyxf4.ondigitalocean.app'}/forgot-password/reset-password`;
   
 
   await supabase.auth.resetPasswordForEmail(email, {
