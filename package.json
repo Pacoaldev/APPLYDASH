@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/build.js && next build",
+    "build": "node scripts/inject-env.js && node scripts/build.js && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate || true",
     "check-env": "node scripts/check-env.js",
     "build:strict": "node scripts/check-env.js && next build",
-    "build:do": "echo 'Building for DigitalOcean...' && next build"
+    "build:do": "node scripts/inject-env.js && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

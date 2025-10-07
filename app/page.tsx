@@ -100,6 +100,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+
+
       <style jsx>{`
         @keyframes fadeInUp {
           from {

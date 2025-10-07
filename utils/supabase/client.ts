@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { config } from '../../lib/config'
+import { getClientConfigSync } from '../../lib/client-config'
 
 export function createClient() {
   // During build time, environment variables might not be available
@@ -8,21 +8,28 @@ export function createClient() {
     return createBrowserClient('https://placeholder.supabase.co', 'placeholder-key')
   }
   
-  // For client-side, get the variables directly from the environment
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || config.supabase.url;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || config.supabase.anonKey;
+  // Get client configuration
+  const clientConfig = getClientConfigSync();
   
   // Validate that we have the required variables for client-side
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!clientConfig.supabaseUrl || !clientConfig.supabaseAnonKey) {
     console.error('Missing Supabase configuration:', {
-      hasUrl: !!supabaseUrl,
-      hasKey: !!supabaseAnonKey,
-      url: supabaseUrl?.substring(0, 30) + '...',
+      hasUrl: !!clientConfig.supabaseUrl,
+      hasKey: !!clientConfig.supabaseAnonKey,
+      url: clientConfig.supabaseUrl?.substring(0, 30) + '...',
+      // Debug info
+      envUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
+      envKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing',
     });
     
     // Return a dummy client instead of throwing to prevent app crash
     return createBrowserClient('https://placeholder.supabase.co', 'placeholder-key')
   }
   
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  console.log('✅ Creating Supabase client with:', {
+    url: clientConfig.supabaseUrl.substring(0, 30) + '...',
+    hasKey: !!clientConfig.supabaseAnonKey
+  });
+  
+  return createBrowserClient(clientConfig.supabaseUrl, clientConfig.supabaseAnonKey)
 }
