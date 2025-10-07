@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientNavbarWrapper from "@/components/ClientNavbarWrapper";
-// import NavbarDemo from "@/components/navbar";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,10 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-  <ClientNavbarWrapper/>
-  <main>
-          {children}
+        <ErrorBoundary>
+          <ClientNavbarWrapper/>
+          <main>
+            {children}
           </main>
+        </ErrorBoundary>
       </body>
     </html>
   );

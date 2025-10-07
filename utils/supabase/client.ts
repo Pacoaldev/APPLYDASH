@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { config, validateConfig } from '../../lib/config'
+import { config } from '../../lib/config'
 
 export function createClient() {
   // During build time, environment variables might not be available
@@ -8,9 +8,21 @@ export function createClient() {
     return createBrowserClient('https://placeholder.supabase.co', 'placeholder-key')
   }
   
-  if (!validateConfig()) {
-    throw new Error('Cannot create Supabase client: Missing environment variables')
+  // For client-side, get the variables directly from the environment
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || config.supabase.url;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || config.supabase.anonKey;
+  
+  // Validate that we have the required variables for client-side
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase configuration:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      url: supabaseUrl?.substring(0, 30) + '...',
+    });
+    
+    // Return a dummy client instead of throwing to prevent app crash
+    return createBrowserClient('https://placeholder.supabase.co', 'placeholder-key')
   }
   
-  return createBrowserClient(config.supabase.url, config.supabase.anonKey)
+  return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
