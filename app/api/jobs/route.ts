@@ -32,10 +32,18 @@ export async function POST(request: Request) {
 
     await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
 
+    const parsedAppliedDate = appliedDate ? new Date(appliedDate) : null;
+
+    // Auto-calculate nextFollowUpDate as appliedDate + 7 days
+    const nextFollowUpDate = parsedAppliedDate
+      ? new Date(new Date(parsedAppliedDate).setDate(parsedAppliedDate.getDate() + 7))
+      : null;
+
     const newJob = await prisma.job.create({
       data: {
         ...jobData,
-        appliedDate: appliedDate ? new Date(appliedDate) : null,
+        appliedDate: parsedAppliedDate,
+        nextFollowUpDate,
         tags: parseTags(tags),
         userid: user.id,
       },
