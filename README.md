@@ -15,12 +15,6 @@ Track your job applications with style and precision. Organize your pipeline, me
 ### Dashboard — Kanban view
 ![Kanban](https://github.com/user-attachments/assets/b07a8653-ac7d-439a-a3eb-393239b8958a)
 
-### Browser extension
-<p float="left">
-  <img alt="Extension popup" src="https://github.com/user-attachments/assets/d15fcf4f-69d9-4757-939a-dfbffe24d86d" width="45%" />
-  <img alt="Extension in action" src="https://github.com/user-attachments/assets/9690b90d-32d4-4207-bdf4-281f2ade1c83" width="45%" />
-</p>
-
 ## ✨ Features
 
 ### Dashboard
@@ -53,6 +47,12 @@ Track your job applications with style and precision. Organize your pipeline, me
 ### Browser extension
 
 Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, and other sites directly into your dashboard. See [`extension/README.md`](extension/README.md) for install instructions.
+
+### Extension Captures
+<p float="left">
+  <img alt="Extension popup" src="https://github.com/user-attachments/assets/d15fcf4f-69d9-4757-939a-dfbffe24d86d" width="45%" />
+  <img alt="Extension in action" src="https://github.com/user-attachments/assets/9690b90d-32d4-4207-bdf4-281f2ade1c83" width="45%" />
+</p>
 
 ## 🚀 Tech Stack
 
