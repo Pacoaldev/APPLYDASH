@@ -4,7 +4,22 @@ Track your job applications with style and precision. Organize your pipeline, me
 
 🚀 **Live App:** [https://applydash.vercel.app](https://applydash.vercel.app/)
 
-![APPLYDASH Screenshot](https://github.com/user-attachments/assets/83ae6bde-a63e-4f5c-a7f7-643255ca4835)
+## 🖼️ Screenshots
+
+### Landing page
+![Portada](https://github.com/user-attachments/assets/b07a8653-ac7d-439a-a3eb-393239b8958a)
+
+### Dashboard — Table view
+![Panel](https://github.com/user-attachments/assets/f79111de-9fae-4dea-a5d0-0f4042794beb)
+
+### Dashboard — Kanban view
+![Kanban](https://github.com/user-attachments/assets/b8ba420b-7b00-469b-8fb9-d1310df8d7aa)
+
+### Browser extension
+<p float="left">
+  <img alt="Extension popup" src="https://github.com/user-attachments/assets/d15fcf4f-69d9-4757-939a-dfbffe24d86d" width="45%" />
+  <img alt="Extension in action" src="https://github.com/user-attachments/assets/9690b90d-32d4-4207-bdf4-281f2ade1c83" width="45%" />
+</p>
 
 ## ✨ Features
 
