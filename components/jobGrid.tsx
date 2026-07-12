@@ -625,7 +625,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
       </div>
 
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto touch-pan-y">
         <div
           ref={gridWrapRef}
           title={t.dashboard.resizeHint}
@@ -634,6 +634,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
             height: gridHeight,
             width: gridWidth === "100%" ? "100%" : gridWidth,
             minWidth: "100%",
+            touchAction: "pan-y",
           }}
         >
           <div className="w-full h-full">

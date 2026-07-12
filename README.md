@@ -27,7 +27,7 @@ Track your job applications with style and precision. Organize your pipeline, me
 - **Light / dark / system theme** — Toggle in the navbar (persists in `localStorage`)
 - **English & Spanish UI** — Language switcher (`EN` / `ES`) across landing and dashboard
 - **Toast notifications** — Real-time feedback via Sonner on save, update, delete, and import
-- **Responsive design** — Works on desktop and mobile
+- **Responsive design** — Works on desktop and mobile; filters and view toggle stack cleanly on small screens; table scroll optimized for touch
 
 ### Authentication & data
 
@@ -43,7 +43,7 @@ Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, and other site
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 16, React 19 |
+| Framework | Next.js 15 (latest patched), React 19 |
 | Styling | Tailwind CSS v4, shadcn/ui, Radix UI |
 | Data grid | AG Grid Community v34 |
 | ORM | Prisma 6 |
@@ -149,7 +149,7 @@ Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, and other site
 | `salary` | Salary info (free text) |
 | `notes` | Personal notes |
 | `tags` | Array of labels |
-| `nextFollowUpDate` | Reminder date for follow-up |
+| `nextFollowUpDate` | Reminder date for follow-up — auto-set to `appliedDate + 7 days` when not specified |
 
 ### Status history
 
@@ -159,11 +159,21 @@ Every create and status change writes a row to `job_status_history` (`oldStatus`
 
 1. Open `chrome://extensions` → enable **Developer mode**
 2. **Load unpacked** → select the `extension/` folder
-3. If icons look generic, run `node scripts/generate-extension-icons.mjs` and click **Reload** on the extension
-3. Log in to ApplyDash in the same browser
-4. Open a job posting → click the extension icon → **Save to ApplyDash**
+3. Click **Reload** (↺) on the extension after any icon or code update
+4. Log in to ApplyDash in the same browser
+5. Open a job posting → click the extension icon → **Save to ApplyDash**
 
-The extension calls `POST /api/jobs` with your session cookie. Configure your instance URL in the popup (e.g. `http://localhost:3000` or `https://applydash.vercel.app`).
+The extension pre-fills **ApplyDash URL** with the production URL (`https://applydash.vercel.app`) automatically — no manual configuration needed. For local development, change it to `http://localhost:3000`.
+
+### Regenerating extension icons
+
+The extension icons are generated from `public/applydashlogo.svg`. If you update the logo, regenerate them with:
+
+```bash
+node scripts/generate-icons.mjs
+```
+
+Then reload the extension in `chrome://extensions`.
 
 ## ☁️ Deploying to Vercel
 
@@ -280,7 +290,21 @@ MIT License — see [LICENSE](LICENSE).
 ## 🙋‍♂️ Support
 
 - [Open an issue](https://github.com/Pacoaldev/APPLYDASH/issues)
-- Deployment alternatives: see [DEPLOYMENT.md](DEPLOYMENT.md) (DigitalOcean)
+
+---
+
+## 📝 Changelog
+
+### July 2025 — Vercel migration
+
+- **Migrated from DigitalOcean (Docker) to Vercel** — removed `output: standalone` and custom build scripts; Vercel now auto-detects Next.js
+- **Next.js upgraded** to latest patched version (CVE-2025-66478 fix)
+- **Supabase connection pooler** — `DATABASE_URL` now uses the Transaction pooler (port 6543) required for Vercel serverless; `DIRECT_URL` added for Prisma migrations
+- **Email redirect fix** — `signUp` now passes `emailRedirectTo` using `NEXT_PUBLIC_SITE_URL` so confirmation emails link to the live domain instead of localhost
+- **`nextFollowUpDate` auto-calculation** — new jobs get `appliedDate + 7 days` automatically in both the dashboard form and the browser extension API
+- **Extension icons fixed** — regenerated as properly centered square PNGs from the SVG logo using `scripts/generate-icons.mjs`
+- **Extension URL pre-filled** — production URL hardcoded as default so users don't need to type it manually
+- **Mobile layout** — filter tabs and view toggle (Tabla/Kanban) now stack on separate rows; table container uses `touch-action: pan-y` to prevent accidental column drags on touch devices
 
 ---
 
