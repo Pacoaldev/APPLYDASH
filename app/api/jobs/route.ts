@@ -1,22 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { ensureUserExists } from "@/lib/userService";
-
-const jobSchema = z.object({
-  company: z.string().nullable().optional(),
-  position: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-  applicationLink: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  appliedDate: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  platform: z.string().nullable().optional(),
-  salary: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
-  tags: z.union([z.array(z.string()), z.string()]).nullable().optional(),
-});
+import { jobSchema } from "@/validation/jobSchema";
 
 function parseTags(tags: string | string[] | null | undefined): string[] {
   if (!tags) return [];

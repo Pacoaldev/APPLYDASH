@@ -1,26 +1,11 @@
 "use server";
 
-import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ensureUserExists } from "@/lib/userService";
 import { getJobStatusHistory } from "@/lib/jobService";
-
-const jobSchema = z.object({
-  company: z.string().nullable().optional(),
-  position: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-  applicationLink: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  appliedDate: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  platform: z.string().nullable().optional(),
-  salary: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
-  nextFollowUpDate: z.string().nullable().optional(),
-  tags: z.union([z.array(z.string()), z.string()]).nullable().optional(),
-});
+import { jobSchema, updateJobSchema } from "@/validation/jobSchema";
 
 function parseTags(tags: string | string[] | null | undefined): string[] {
   if (!tags) return [];
@@ -118,10 +103,6 @@ export async function createJob(data: unknown) {
     };
   }
 }
-
-const updateJobSchema = jobSchema.extend({
-  id: z.uuid(),
-});
 
 export async function updateJob(data: unknown) {
   const user = await requireUser();
