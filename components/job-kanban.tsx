@@ -7,7 +7,6 @@ import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { ExternalLink, History, Bell } from "lucide-react";
-import cellContents from "@/data/cellContents";
 
 type Props = {
   jobs: Job[];
@@ -18,6 +17,13 @@ type Props = {
 export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
   const { t } = useLocale();
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const columnLabels: Record<string, string> = {
+    Applied: t.dashboard.kanbanColumns.applied,
+    Interview: t.dashboard.kanbanColumns.interview,
+    Offer: t.dashboard.kanbanColumns.offer,
+    Rejected: t.dashboard.kanbanColumns.rejected,
+  };
 
   const getColumnJobs = (statuses: readonly string[]) =>
     jobs.filter((j) => j.status && statuses.includes(j.status));
@@ -35,7 +41,7 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
     if (result.error) {
       toast.error(result.error);
     } else if (result.success && result.data) {
-      toast.success("Status updated");
+      toast.success(t.dashboard.statusUpdated);
       onJobsChange(jobs.map((j) => (j.id === job.id ? { ...j, ...result.data, status: targetStatus } : j)));
     }
     setDraggingId(null);
@@ -53,7 +59,7 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
             handleDrop(defaultStatus);
           }}
         >
-          <h3 className="font-semibold text-sm text-foreground mb-3 px-1">{col.key}</h3>
+          <h3 className="font-semibold text-sm text-foreground mb-3 px-1">{columnLabels[col.key] ?? col.key}</h3>
           <div className="space-y-2 min-h-[200px]">
             {getColumnJobs(col.statuses).map((job) => {
               const style = getStatusStyle(job.status);
@@ -85,21 +91,21 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
                     ))}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <select
-                      value={job.status ?? "Applied"}
-                      onChange={async (e) => {
-                        const result = await updateJob({ ...job, status: e.target.value });
+                    <input
+                      type="text"
+                      defaultValue={job.status ?? ""}
+                      onBlur={async (e) => {
+                        const newStatus = e.target.value.trim();
+                        if (!newStatus || newStatus === (job.status ?? "")) return;
+                        const result = await updateJob({ ...job, status: newStatus });
                         if (result.success && result.data) {
                           onJobsChange(jobs.map((j) => (j.id === job.id ? { ...j, ...result.data } : j)));
-                          toast.success("Status updated");
+                          toast.success(t.dashboard.statusUpdated);
                         }
                       }}
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-background"
-                    >
-                      {cellContents.status.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                      className="text-xs border border-border rounded px-1.5 py-0.5 bg-background min-w-[80px] flex-1"
+                      placeholder={t.dashboard.columns.status}
+                    />
                     {job.applicationLink && (
                       <a
                         href={job.applicationLink}

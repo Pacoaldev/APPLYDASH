@@ -372,7 +372,7 @@ export default function DebugPage() {
         {/* Footer info */}
         <div className="mt-8 text-center text-sm text-gray-500 border-t pt-4">
           <p>
-            © 2025 ApplyDash - Developed by{' '}
+            © 2026 ApplyDash - Developed by{' '}
             <span className="text-blue-600 font-semibold">Pacoaldev</span>
           </p>
         </div>

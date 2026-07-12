@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { JobDashboard } from "@/components/job-dashboard";
+import { DashboardHeader } from "@/components/dashboard-header";
 import { JobGridSkeleton } from "@/components/skeletons";
 
 export const dynamic = "force-dynamic";
@@ -20,15 +21,8 @@ export default async function DashboardPage() {
     const jobs = await getJobsForUser(user.id);
 
     return (
-      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 max-w-7xl">
-        <div className="text-center my-8">
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-2 leading-tight">
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              ApplyDash
-            </span>{" "}
-            Dashboard
-          </h1>
-        </div>
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl flex flex-col min-h-[calc(100dvh-4.5rem)]">
+        <DashboardHeader />
         <Suspense fallback={<JobGridSkeleton />}>
           <JobDashboard data={jobs} />
         </Suspense>

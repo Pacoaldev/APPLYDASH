@@ -6,6 +6,7 @@ import { useLocale } from "@/components/locale-provider";
 type Props = {
   active: JobFilter;
   onChange: (filter: JobFilter) => void;
+  className?: string;
 };
 
 const FILTERS: JobFilter[] = [
@@ -17,7 +18,7 @@ const FILTERS: JobFilter[] = [
   "offers",
 ];
 
-export function QuickFilters({ active, onChange }: Props) {
+export function QuickFilters({ active, onChange, className = "" }: Props) {
   const { t } = useLocale();
 
   const labels: Record<JobFilter, string> = {
@@ -30,13 +31,13 @@ export function QuickFilters({ active, onChange }: Props) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className={`flex flex-wrap gap-1.5 mb-4 ${className}`}>
       {FILTERS.map((filter) => (
         <button
           key={filter}
           type="button"
           onClick={() => onChange(filter)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+          className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
             active === filter
               ? "bg-blue-600 text-white shadow"
               : "bg-muted text-muted-foreground hover:bg-accent"

@@ -9,10 +9,10 @@ export function Footer({ className = '' }: FooterProps) {
   const developerUrl = getDeveloperUrl();
   
   return (
-    <footer className={`bg-card text-foreground border-t border-border py-8 ${className}`}>
+    <footer className={`bg-card text-foreground border-t border-border py-5 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
+          <div className="flex items-center justify-center space-x-2 mb-2">
             <img 
               src="/applydashlogo.svg" 
               alt="ApplyDash Logo" 
@@ -27,7 +27,7 @@ export function Footer({ className = '' }: FooterProps) {
           </p>
           <div className="border-t border-border pt-4 mt-4">
             <p className="text-sm text-muted-foreground">
-              © 2025 ApplyDash. All rights reserved - Developed by{' '}
+              © 2026 ApplyDash. All rights reserved - Developed by{' '}
               <a 
                 href={developerUrl}
                 target="_blank"
