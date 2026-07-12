@@ -7,13 +7,13 @@ Track your job applications with style and precision. Organize your pipeline, me
 ## 🖼️ Screenshots
 
 ### Landing page
-![Portada](https://github.com/user-attachments/assets/b07a8653-ac7d-439a-a3eb-393239b8958a)
+![Portada](https://github.com/user-attachments/assets/b8ba420b-7b00-469b-8fb9-d1310df8d7aa)
 
 ### Dashboard — Table view
 ![Panel](https://github.com/user-attachments/assets/f79111de-9fae-4dea-a5d0-0f4042794beb)
 
 ### Dashboard — Kanban view
-![Kanban](https://github.com/user-attachments/assets/b8ba420b-7b00-469b-8fb9-d1310df8d7aa)
+![Kanban](https://github.com/user-attachments/assets/b07a8653-ac7d-439a-a3eb-393239b8958a)
 
 ### Browser extension
 <p float="left">
