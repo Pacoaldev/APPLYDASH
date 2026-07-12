@@ -2,7 +2,7 @@
 
 Track your job applications with style and precision. Watch your career opportunities come to life.
 
-🚀 **Live App:** https://applydash.vercel.app
+🚀 **Live App:** [https://applydash.vercel.app](https://applydash.vercel.app/)
 
 ![APPLYDASH Screenshot](https://github.com/user-attachments/assets/83ae6bde-a63e-4f5c-a7f7-643255ca4835)
 
