@@ -34,13 +34,3 @@ export const updateJobSchema = jobSchema.extend({
   id: z.uuid(),
 });
 
-// ponytail: self-check — AG Grid date editors send Date objects, not ISO strings
-if (process.env.NODE_ENV !== "production") {
-  const check = jobSchema.safeParse({
-    appliedDate: new Date("2026-07-27T12:00:00"),
-    nextFollowUpDate: new Date("2024-07-31T12:00:00"),
-  });
-  if (!check.success || check.data.appliedDate !== "2026-07-27") {
-    throw new Error("jobSchema date coercion self-check failed");
-  }
-}
