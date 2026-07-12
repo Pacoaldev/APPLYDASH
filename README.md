@@ -17,72 +17,115 @@ Track your job applications with style and precision. Watch your career opportun
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Next.js, React, Tailwind CSS, Radix UI
-- **Backend**: Prisma ORM, PostgreSQL
+- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Radix UI
+- **Backend**: Prisma ORM 6, PostgreSQL
 - **Authentication**: Supabase Auth
 - **Data Grid**: AG Grid
-- **Deployment Ready**: Optimized for production
+- **Deployment**: Vercel (Hobby tier)
 
 ## 🏗️ Quick Start
 
 ### Prerequisites
-- Node.js 18+ and pnpm
-- PostgreSQL database
+- Node.js 18+
+- PostgreSQL database (via Supabase)
 - Supabase account
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Fralopala2/APPLYDASH.git
+   git clone https://github.com/Pacoaldev/APPLYDASH.git
    cd APPLYDASH
    ```
 
 2. **Install dependencies**
    ```bash
-   pnpm install
+   npm install
    ```
 
 3. **Set up environment variables**
-   
-   Create a `.env` file in the root directory:
-   ```env
-   SUPABASE_URL=your_supabase_project_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   DATABASE_URL=postgresql://username:password@host:port/database
-   JWT_SECRET=your_jwt_secret_key
+
+   Copy `.env.example` to `.env.local` and fill in the values:
+   ```bash
+   cp .env.example .env.local
    ```
-   
-   > ⚠️ Never commit your `.env` file to version control
+
+   ```env
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+   # Site URL
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+   # Database — use Transaction pooler URL from Supabase (port 6543)
+   DATABASE_URL=postgresql://postgres.xxxx:[PASSWORD]@aws-0-eu-west-2.pooler.supabase.com:6543/postgres
+
+   # Direct connection — used by Prisma migrations (port 5432)
+   DIRECT_URL=postgresql://postgres:[PASSWORD]@db.xxxx.supabase.co:5432/postgres
+
+   # JWT Secret (from Supabase → Settings → API → JWT Settings)
+   JWT_SECRET=your_jwt_secret
+   ```
+
+   > ⚠️ Never commit your `.env.local` file to version control
 
 4. **Run database migrations**
    ```bash
-   pnpm prisma migrate dev
+   npx prisma migrate dev
    ```
 
 5. **Start development server**
    ```bash
-   pnpm dev
+   npm run dev
    ```
 
 Visit [http://localhost:3000](http://localhost:3000) to see your application.
 
-## 📦 Production Deployment
+## ☁️ Deploying to Vercel
 
-```bash
-pnpm build
-pnpm start
-```
+This project is configured for Vercel. No custom build settings are needed — Vercel auto-detects Next.js.
+
+### Environment Variables in Vercel
+
+Add these in **Vercel → Settings → Environment Variables**:
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable/anon key |
+| `NEXT_PUBLIC_SITE_URL` | Your Vercel deployment URL (e.g. `https://applydash.vercel.app`) |
+| `DATABASE_URL` | **Transaction pooler** URL from Supabase (port `6543`) — required for Vercel serverless |
+| `DIRECT_URL` | **Direct connection** URL from Supabase (port `5432`) — used by Prisma migrations |
+| `JWT_SECRET` | JWT secret from Supabase → Settings → API |
+
+> ⚠️ Vercel serverless functions cannot use direct PostgreSQL connections (port 5432). Always use the **Transaction pooler** URL for `DATABASE_URL`.
+
+### Supabase Auth Configuration
+
+In **Supabase → Authentication → URL Configuration**, set:
+- **Site URL**: `https://applydash.vercel.app`
+- **Redirect URLs**: `https://applydash.vercel.app/**`
+
+### First Deploy
+
+1. Push to GitHub — Vercel deploys automatically on every push to `main`
+2. After the first deploy, run migrations if needed:
+   ```bash
+   npx prisma migrate deploy
+   ```
 
 ## 🛠️ Available Scripts
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Create production build |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm prisma studio` | Open Prisma database browser |
+| `npm run dev` | Start development server (Turbopack) |
+| `npm run build` | Create production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npx prisma studio` | Open Prisma database browser |
+| `npx prisma migrate dev` | Run migrations in development |
+| `npx prisma migrate deploy` | Run migrations in production |
 
 ## 📁 Project Structure
 
@@ -90,25 +133,22 @@ pnpm start
 APPLYDASH/
 ├── app/              # Next.js app directory (pages & API routes)
 ├── components/       # Reusable UI components
-├── lib/             # Shared utilities and services
-├── prisma/          # Database schema and migrations
-├── public/          # Static assets
-├── utils/           # Helper functions
-├── validation/      # Zod validation schemas
-└── data/           # Sample/seed data
+├── lib/              # Shared utilities and services
+├── prisma/           # Database schema and migrations
+├── public/           # Static assets
+├── scripts/          # Utility scripts
+├── utils/            # Helper functions
+├── validation/       # Zod validation schemas
+└── data/             # Sample/seed data
 ```
 
 ## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
 3. **Commit** your changes: `git commit -m 'Add amazing feature'`
 4. **Push** to the branch: `git push origin feature/amazing-feature`
 5. **Open** a Pull Request
-
-Please ensure your code follows the existing style and includes appropriate tests.
 
 ## 📄 License
 
@@ -117,8 +157,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 ## 🙋‍♂️ Support
 
 If you have questions or need help:
-- Open an [issue](https://github.com/Fralopala2/APPLYDASH/issues)
-- Check existing [discussions](https://github.com/Fralopala2/APPLYDASH/discussions)
+- Open an [issue](https://github.com/Pacoaldev/APPLYDASH/issues)
 
 ---
 
