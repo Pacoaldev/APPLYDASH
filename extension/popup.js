@@ -1,8 +1,9 @@
+const PRODUCTION_URL = "https://applydash.vercel.app";
 const fields = ["company", "position", "platform", "status", "baseUrl"];
 
 document.addEventListener("DOMContentLoaded", async () => {
   const stored = await chrome.storage.local.get(["baseUrl", "scraped"]);
-  if (stored.baseUrl) document.getElementById("baseUrl").value = stored.baseUrl;
+  document.getElementById("baseUrl").value = stored.baseUrl || PRODUCTION_URL;
   if (stored.scraped) {
     for (const key of ["company", "position", "platform"]) {
       if (stored.scraped[key]) document.getElementById(key).value = stored.scraped[key];

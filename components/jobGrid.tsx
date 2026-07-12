@@ -368,6 +368,10 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     const today = new Date();
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
+    const nextFollowUp = new Date();
+    nextFollowUp.setDate(nextFollowUp.getDate() + 7);
+    const nextFollowUpString = `${nextFollowUp.getFullYear()}-${String(nextFollowUp.getMonth() + 1).padStart(2, "0")}-${String(nextFollowUp.getDate()).padStart(2, "0")}`;
+
     const newRow: Job = {
       id: `temp_${uuidv4()}`,
       company: "",
@@ -380,7 +384,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
       location: "undisclosed",
       salary: "0",
       notes: " ",
-      nextFollowUpDate: null,
+      nextFollowUpDate: nextFollowUpString,
       tags: [],
       userid: "temp",
     };
