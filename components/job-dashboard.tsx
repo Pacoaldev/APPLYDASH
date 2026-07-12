@@ -44,9 +44,11 @@ export function JobDashboard({ data }: Props) {
     <div className="flex flex-col flex-1 min-h-0 w-full">
       <DashboardStats jobs={jobs} />
 
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-3">
-        <QuickFilters active={filter} onChange={setFilter} className="mb-0 flex-1" />
-        <div className="flex items-center gap-2 shrink-0">
+      <div className="flex flex-col gap-2 mb-3">
+        {/* Filters row */}
+        <QuickFilters active={filter} onChange={setFilter} className="mb-0" />
+        {/* View toggle — right-aligned, on its own row on mobile */}
+        <div className="flex items-center gap-2 justify-end">
           <button
             type="button"
             onClick={() => setView("table")}
