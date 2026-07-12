@@ -41,46 +41,50 @@ export function JobDashboard({ data }: Props) {
   };
 
   return (
-    <div>
+    <div className="flex flex-col flex-1 min-h-0">
       <DashboardStats jobs={jobs} />
-      <QuickFilters active={filter} onChange={setFilter} />
 
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => setView("table")}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-            view === "table" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
-          }`}
-        >
-          <Table2 className="h-4 w-4" />
-          {t.dashboard.viewTable}
-        </button>
-        <button
-          type="button"
-          onClick={() => setView("kanban")}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-            view === "kanban" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
-          }`}
-        >
-          <LayoutGrid className="h-4 w-4" />
-          {t.dashboard.viewKanban}
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-3">
+        <QuickFilters active={filter} onChange={setFilter} className="mb-0 flex-1" />
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setView("table")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              view === "table" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            <Table2 className="h-4 w-4" />
+            {t.dashboard.viewTable}
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("kanban")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              view === "kanban" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            {t.dashboard.viewKanban}
+          </button>
+        </div>
       </div>
 
-      {view === "table" ? (
+      <div className="flex-1 min-h-0">
+        {view === "table" ? (
         <JobGrid
           data={filteredJobs}
           onJobsChange={handleJobsChange}
           onShowHistory={setHistoryJob}
         />
-      ) : (
+        ) : (
         <JobKanban
           jobs={filteredJobs}
           onHistory={setHistoryJob}
           onJobsChange={handleJobsChange}
         />
-      )}
+        )}
+      </div>
 
       <StatusHistoryPanel
         jobId={historyJob?.id ?? null}

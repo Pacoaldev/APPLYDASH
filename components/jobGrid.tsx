@@ -32,10 +32,13 @@ import {
   Bell,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
-import cellContents from "@/data/cellContents";
 import { useTheme } from "@/components/theme-provider";
 import { useLocale } from "@/components/locale-provider";
+import { getAgGridLocale } from "@/lib/ag-grid-locale";
 import { getStatusStyle, isFollowUpDue, parseTagsInput } from "@/lib/job-utils";
+
+const GRID_HEIGHT_KEY = "applydash-grid-height";
+const GRID_MIN_H = 160;
 
 function uuidv4() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -136,6 +139,17 @@ type Props = {
   onShowHistory?: (job: Job) => void;
 };
 
+function getInitialGridHeight(rowCount: number): number {
+  if (typeof window === "undefined") return 280;
+  try {
+    const stored = localStorage.getItem(GRID_HEIGHT_KEY);
+    if (stored) return Math.max(GRID_MIN_H, Number(stored));
+  } catch {
+    // ponytail: storage blocked
+  }
+  return Math.min(480, Math.max(200, 100 + rowCount * 42 + 56));
+}
+
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -152,11 +166,14 @@ function parseCsv(text: string): Record<string, string>[] {
 
 export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const { resolvedTheme } = useTheme();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const gridTheme = resolvedTheme === "dark" ? darkGridTheme : lightGridTheme;
+  const localeText = useMemo(() => getAgGridLocale(locale), [locale]);
   const gridRef = useRef<AgGridReact<Job>>(null);
+  const gridWrapRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [rowData, setRowData] = useState<Job[]>(data);
+  const [gridHeight, setGridHeight] = useState(() => getInitialGridHeight(data.length));
 
   const updateRows = (next: Job[]) => {
     setRowData(next);
@@ -166,6 +183,24 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   useEffect(() => {
     setRowData(data);
   }, [data]);
+
+  useEffect(() => {
+    const el = gridWrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const h = el.offsetHeight;
+      if (h >= GRID_MIN_H) {
+        setGridHeight(h);
+        try {
+          localStorage.setItem(GRID_HEIGHT_KEY, String(h));
+        } catch {
+          // ponytail: ignore
+        }
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const [tempRowId, setTempRowId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -177,7 +212,9 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const [isImporting, setIsImporting] = useState(false);
 
   const columnDefs = useMemo<ColDef<Job>[]>(
-    () => [
+    () => {
+      const c = t.dashboard.columns;
+      return [
       {
         headerName: "#",
         valueGetter: "node.rowIndex + 1",
@@ -186,28 +223,22 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         maxWidth: 40,
       },
       {
-        headerName: "Company",
+        headerName: c.company,
         field: "company",
         editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: cellContents.company },
       },
       {
-        headerName: "Position",
+        headerName: c.position,
         field: "position",
         editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: cellContents.position },
       },
       {
-        headerName: "Type",
+        headerName: c.type,
         field: "type",
         editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: ["Remote", "Office", "Hybrid"] },
       },
       {
-        headerName: "Applied Date",
+        headerName: c.appliedDate,
         field: "appliedDate",
         editable: true,
         cellEditor: "agDateCellEditor",
@@ -218,17 +249,15 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: "Platform", field: "platform", editable: true },
+      { headerName: c.platform, field: "platform", editable: true },
       {
-        headerName: "Status",
+        headerName: c.status,
         field: "status",
         editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: cellContents.status },
         cellRenderer: StatusCellRenderer,
       },
-      { headerName: "Location", field: "location", editable: true },
-      { headerName: "Salary", field: "salary", editable: true },
+      { headerName: c.location, field: "location", editable: true },
+      { headerName: c.salary, field: "salary", editable: true },
       {
         headerName: t.dashboard.tags,
         field: "tags",
@@ -251,14 +280,15 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: "Notes", field: "notes", editable: true, flex: 2 },
+      { headerName: c.notes, field: "notes", editable: true, flex: 2 },
       {
-        headerName: "Link",
+        headerName: c.link,
         field: "applicationLink",
         editable: true,
         cellRenderer: LinkCellRenderer,
       },
-    ],
+    ];
+    },
     [t]
   );
 
@@ -318,24 +348,24 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     api.stopEditing();
     const rowNode = api.getRowNode(tempRowId);
     if (!rowNode?.data) {
-      toast.error("Could not find the new row to save.");
+      toast.error(t.dashboard.toast.rowNotFound);
       setIsSaving(false);
       return;
     }
     try {
       const result = await createJob({ ...rowNode.data, type: rowNode.data.type || "Office" });
       if (result.error) {
-        toast.error("Failed to save job", { description: result.error });
+        toast.error(t.dashboard.toast.saveError, { description: result.error });
       } else if (result.success && result.data) {
-        toast.success("Job saved successfully!");
+        toast.success(t.dashboard.toast.saveSuccess);
         updateRows([
           ...rowData.filter((j) => j.id !== rowNode.data!.id),
           result.data as Job,
         ]);
         setTempRowId(null);
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred while saving.");
+    } catch {
+      toast.error(t.dashboard.toast.unexpectedError);
     } finally {
       setIsSaving(false);
     }
@@ -364,22 +394,22 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     const api = gridRef.current?.api;
     const rowNode = api?.getRowNode(dirtyRowId);
     if (!rowNode?.data) {
-      toast.error("Could not find the row to update.");
+      toast.error(t.dashboard.toast.rowNotFound);
       setIsUpdating(false);
       return;
     }
     try {
       const result = await updateJob(rowNode.data);
       if (result.error) {
-        toast.error("Failed to update job", { description: result.error });
+        toast.error(t.dashboard.toast.updateError, { description: result.error });
       } else if (result.success && result.data) {
-        toast.success("Job updated successfully!");
+        toast.success(t.dashboard.toast.updateSuccess);
         updateRows(rowData.map((j) => (j.id === rowNode.data!.id ? (result.data as Job) : j)));
         setDirtyRowId(null);
         originalRowData.current = null;
       }
     } catch {
-      toast.error("An unexpected error occurred while updating.");
+      toast.error(t.dashboard.toast.unexpectedError);
     } finally {
       setIsUpdating(false);
     }
@@ -404,14 +434,14 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     try {
       const result = await deleteJob(rowNode.data.id);
       if (result.error) {
-        toast.error("Failed to delete job", { description: result.error });
+        toast.error(t.dashboard.toast.deleteError, { description: result.error });
       } else {
-        toast.success("Job deleted successfully!");
+        toast.success(t.dashboard.toast.deleteSuccess);
         updateRows(rowData.filter((j) => j.id !== rowNode.data!.id));
         setSelectedRowId(null);
       }
     } catch {
-      toast.error("An unexpected error occurred while deleting.");
+      toast.error(t.dashboard.toast.unexpectedError);
     } finally {
       setIsDeleting(false);
     }
@@ -419,7 +449,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
 
   const handleExportCSV = () => {
     gridRef.current?.api?.exportDataAsCsv({ fileName: "jobs.csv" });
-    toast.success("CSV downloaded!");
+    toast.success(t.dashboard.toast.exportSuccess);
   };
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -461,7 +491,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const selectedJob = rowData.find((j) => j.id === selectedRowId);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2 md:gap-3">
         {!tempRowId && !dirtyRowId && (
           <GlowingButton onClick={handleAddRow} className="w-fit" variant="outline">
@@ -521,7 +551,13 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
       </div>
 
       <div className="w-full overflow-x-auto">
-        <div className="ag-theme-quartz min-w-[900px] min-h-[300px] h-[400px] sm:h-[500px]">
+        <div
+          ref={gridWrapRef}
+          title={t.dashboard.resizeHint}
+          className="ag-theme-quartz min-w-[900px] w-full h-full resize-y overflow-hidden min-h-[160px] max-h-[92dvh] border border-border rounded-lg"
+          style={{ height: gridHeight }}
+        >
+          <div className="w-full h-full">
           <AgGridReact
             ref={gridRef}
             rowData={rowData}
@@ -530,12 +566,15 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
             animateRows
             pagination
             theme={gridTheme}
+            localeText={localeText}
             stopEditingWhenCellsLoseFocus
             getRowId={(p) => p.data.id}
             onCellValueChanged={onCellValueChanged}
             onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
             suppressHorizontalScroll={false}
+            domLayout="normal"
           />
+          </div>
         </div>
       </div>
     </div>

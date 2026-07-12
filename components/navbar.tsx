@@ -49,7 +49,7 @@ export function NavbarDemo() {
   useEffect(() => { setMounted(true); }, []);
   return (
     <div className="relative w-full">
-      <nav className="flex items-center justify-between w-full px-4 py-3 bg-transparent lg:px-8">
+      <nav className="flex items-center justify-between w-full px-4 py-2 bg-transparent lg:px-8">
         {/* Logo and Title */}
         <div className="flex items-center gap-2">
           <span>

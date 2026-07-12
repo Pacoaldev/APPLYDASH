@@ -21,17 +21,17 @@ export function DashboardStats({ jobs }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-xl border border-border bg-card p-4 shadow-sm"
+          className="rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
         >
-          <div className="flex items-center gap-2 mb-1">
-            <card.icon className={`h-4 w-4 ${card.color}`} />
-            <span className="text-xs text-muted-foreground truncate">{card.label}</span>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <card.icon className={`h-3.5 w-3.5 ${card.color}`} />
+            <span className="text-[11px] text-muted-foreground truncate leading-tight">{card.label}</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{card.value}</p>
+          <p className="text-lg font-bold text-foreground leading-none">{card.value}</p>
         </div>
       ))}
     </div>
