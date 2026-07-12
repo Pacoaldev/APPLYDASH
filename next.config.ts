@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable standalone output for Docker
-  output: 'standalone',
+  // Production settings for Vercel
   
   // TypeScript and ESLint configuration
   typescript: {
