@@ -533,15 +533,26 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         nextFollowUpDate: r.nextFollowUpDate || r["Next follow-up"] || null,
         tags: r.tags || r.Tags || "",
       }));
+      if (mapped.length === 0) {
+        toast.error(t.dashboard.importError, {
+          description: "El CSV está vacío o no tiene filas de datos.",
+        });
+        return;
+      }
       const result = await importJobs(mapped);
       if (result.error) {
         toast.error(t.dashboard.importError, { description: result.error });
       } else {
         toast.success(t.dashboard.importSuccess.replace("{count}", String(result.imported ?? 0)));
+        if (result.errors?.length) {
+          toast.warning(`${result.errors.length} fila(s) no se importaron.`);
+        }
         window.location.reload();
       }
-    } catch {
-      toast.error(t.dashboard.importError);
+    } catch (error) {
+      toast.error(t.dashboard.importError, {
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

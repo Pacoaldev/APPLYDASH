@@ -181,7 +181,18 @@ export async function importJobs(rows: unknown[]) {
   const user = await requireUser();
   if (!user) return { error: "Authentication required." };
 
-  await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
+  if (!Array.isArray(rows)) {
+    return { error: "Invalid import data." };
+  }
+
+  try {
+    await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
+  } catch (error) {
+    console.error("Failed to ensure user exists during import:", error);
+    return {
+      error: `Database error: Could not import jobs. ${error instanceof Error ? error.message : "Unknown error"}`,
+    };
+  }
 
   let imported = 0;
   const errors: string[] = [];
