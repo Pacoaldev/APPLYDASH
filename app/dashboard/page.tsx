@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     const jobs = await getJobsForUser(user.id);
 
     return (
-      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl flex flex-col min-h-[calc(100dvh-4.5rem)]">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col min-h-[calc(100dvh-4.5rem)]">
         <DashboardHeader />
         <Suspense fallback={<JobGridSkeleton />}>
           <JobDashboard data={jobs} />

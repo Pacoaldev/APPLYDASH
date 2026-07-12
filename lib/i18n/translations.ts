@@ -72,7 +72,7 @@ export const translations = {
       noHistory: "No status changes yet",
       importSuccess: "Imported {count} jobs",
       importError: "Import failed",
-      resizeHint: "Drag bottom edge to resize",
+      resizeHint: "Drag the bottom-right corner to resize",
       columns: {
         company: "Company",
         position: "Position",
@@ -181,7 +181,7 @@ export const translations = {
       noHistory: "Sin cambios de estado aún",
       importSuccess: "Importadas {count} ofertas",
       importError: "Error al importar",
-      resizeHint: "Arrastra el borde inferior para redimensionar",
+      resizeHint: "Arrastra la esquina inferior para redimensionar",
       columns: {
         company: "Empresa",
         position: "Puesto",

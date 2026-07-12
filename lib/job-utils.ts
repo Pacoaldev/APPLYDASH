@@ -108,6 +108,19 @@ export function computeStats(jobs: Job[]) {
   return { total, interviewing, offers, rejected, responseRate, followUpDue };
 }
 
+export function formatDateDDMMYY(value: string | Date | null | undefined): string {
+  if (!value) return "";
+  const d =
+    value instanceof Date
+      ? value
+      : new Date(value.includes("T") ? value : `${value}T12:00:00`);
+  if (isNaN(d.getTime())) return String(value);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
+}
+
 export function parseTagsInput(value: string): string[] {
   return value
     .split(",")

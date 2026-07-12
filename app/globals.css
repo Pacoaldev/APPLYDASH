@@ -37,13 +37,9 @@ body {
   scrollbar-color: rgba(180, 180, 180, 0.3) transparent;
 }
 
-.ag-body-horizontal-scroll,
+/* ponytail: allow AG Grid horizontal scroll — hiding it truncated columns */
 .ag-paging-panel {
-  overflow-x: hidden !important;
-}
-
-.ag-body-horizontal-scroll {
-  display: none !important;
+  flex-wrap: wrap;
 }
 /* :root {
   --background:#ffffff;
