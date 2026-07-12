@@ -35,7 +35,8 @@ import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
 import { useLocale } from "@/components/locale-provider";
 import { getAgGridLocale } from "@/lib/ag-grid-locale";
-import { getStatusStyle, isFollowUpDue, parseTagsInput, formatDateDDMMYY } from "@/lib/job-utils";
+import { getStatusStyle, isFollowUpDue, parseTagsInput, formatDateDDMMYY, displayStatus, canonicalStatus } from "@/lib/job-utils";
+import cellContents from "@/data/cellContents";
 
 const GRID_HEIGHT_KEY = "applydash-grid-height";
 const GRID_WIDTH_KEY = "applydash-grid-width";
@@ -97,10 +98,12 @@ const darkGridTheme = themeQuartz.withParams({
 });
 
 function StatusCellRenderer(params: ICellRendererParams<Job>) {
-  const style = getStatusStyle(params.value ?? null);
+  const { locale } = useLocale();
+  const style = getStatusStyle(params.data?.status ?? null);
+  const label = displayStatus(params.data?.status ?? null, locale);
   return (
     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
-      {params.value ?? "—"}
+      {label}
     </span>
   );
 }
@@ -239,6 +242,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const columnDefs = useMemo<ColDef<Job>[]>(
     () => {
       const c = t.dashboard.columns;
+      const typeOptions = locale === "es" ? cellContents.typeEs : cellContents.type;
+      const statusOptions = locale === "es" ? cellContents.statusEs : cellContents.status;
       return [
       {
         headerName: "#",
@@ -266,6 +271,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         field: "type",
         editable: true,
         minWidth: 110,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: typeOptions },
       },
       {
         headerName: c.appliedDate,
@@ -286,6 +293,16 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         field: "status",
         editable: true,
         minWidth: 120,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: statusOptions },
+        valueGetter: (p) => displayStatus(p.data?.status ?? null, locale),
+        valueSetter: (p) => {
+          if (!p.data) return false;
+          const next = canonicalStatus(String(p.newValue ?? "")) || String(p.newValue ?? "");
+          if (!next) return false;
+          p.data.status = next;
+          return true;
+        },
         cellRenderer: StatusCellRenderer,
       },
       { headerName: c.location, field: "location", editable: true, minWidth: 140, tooltipField: "location" },
@@ -325,7 +342,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
       },
     ];
     },
-    [t]
+    [t, locale]
   );
 
   const defaultColDef = useMemo<ColDef<Job>>(
