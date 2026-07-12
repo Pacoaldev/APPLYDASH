@@ -1,44 +1,60 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
   CellValueChangedEvent,
   ColDef,
+  ICellRendererParams,
   RowClickedEvent,
   themeQuartz,
 } from "ag-grid-community";
 import { Job } from "@/types/job";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
-import { createJob, updateJob } from "@/app/dashboard/actions";
+import { createJob, updateJob, deleteJob, importJobs } from "@/app/dashboard/actions";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
-import { Check, Download, Loader2, PlusCircle, X } from "lucide-react";
-import { Trash2 } from "lucide-react";
-import { deleteJob } from "@/app/dashboard/actions";
+import {
+  Check,
+  Download,
+  Loader2,
+  PlusCircle,
+  X,
+  Trash2,
+  Upload,
+  History,
+  ExternalLink,
+  Bell,
+} from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import cellContents from "@/data/cellContents";
+import { useTheme } from "@/components/theme-provider";
+import { useLocale } from "@/components/locale-provider";
+import { getStatusStyle, isFollowUpDue, parseTagsInput } from "@/lib/job-utils";
 
-// Utility function to generate UUIDs compatible in any environment
 function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const myTheme = themeQuartz.withParams({
+const lightGridTheme = themeQuartz.withParams({
   accentColor: "#087AD1",
   backgroundColor: "#FFFFFF",
   borderColor: "#D7E2E6",
   borderRadius: 2,
   browserColorScheme: "light",
   cellHorizontalPaddingScale: 1,
-  chromeBackgroundColor: {
-    ref: "backgroundColor",
-  },
+  chromeBackgroundColor: { ref: "backgroundColor" },
   columnBorder: true,
   fontSize: 13,
   foregroundColor: "#555B62",
@@ -53,93 +69,198 @@ const myTheme = themeQuartz.withParams({
   wrapperBorderRadius: 10,
 });
 
+const darkGridTheme = themeQuartz.withParams({
+  accentColor: "#60A5FA",
+  backgroundColor: "#1e293b",
+  borderColor: "#334155",
+  borderRadius: 2,
+  browserColorScheme: "dark",
+  cellHorizontalPaddingScale: 1,
+  chromeBackgroundColor: { ref: "backgroundColor" },
+  columnBorder: true,
+  fontSize: 13,
+  foregroundColor: "#cbd5e1",
+  headerBackgroundColor: "#0f172a",
+  headerFontWeight: 400,
+  headerTextColor: "#94a3b8",
+  rowBorder: true,
+  rowVerticalPaddingScale: 0.8,
+  sidePanelBorder: true,
+  spacing: 6,
+  wrapperBorder: true,
+  wrapperBorderRadius: 10,
+});
+
+function StatusCellRenderer(params: ICellRendererParams<Job>) {
+  const style = getStatusStyle(params.value ?? null);
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+      {params.value ?? "—"}
+    </span>
+  );
+}
+
+function LinkCellRenderer(params: ICellRendererParams<Job>) {
+  const url = params.value as string | null;
+  if (!url) return <span className="text-muted-foreground">—</span>;
+  return (
+    <a
+      href={url.startsWith("http") ? url : `https://${url}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline truncate"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <ExternalLink className="h-3 w-3 shrink-0" />
+      <span className="truncate">{url.replace(/^https?:\/\//, "").slice(0, 30)}</span>
+    </a>
+  );
+}
+
+function FollowUpCellRenderer(params: ICellRendererParams<Job>) {
+  const job = params.data;
+  if (!job) return null;
+  const due = isFollowUpDue(job);
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs ${due ? "text-cyan-600 font-semibold" : ""}`}>
+      {due && <Bell className="h-3 w-3" />}
+      {params.value ?? "—"}
+    </span>
+  );
+}
+
+
 type Props = {
   data: Job[];
+  onJobsChange?: (jobs: Job[]) => void;
+  onShowHistory?: (job: Job) => void;
 };
 
-export default function JobGrid({ data }: Props) {
+function parseCsv(text: string): Record<string, string>[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  return lines.slice(1).map((line) => {
+    const values = line.match(/("([^"]|"")*"|[^,]*)/g) ?? [];
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => {
+      row[h] = (values[i] ?? "").trim().replace(/^"|"$/g, "").replace(/""/g, '"');
+    });
+    return row;
+  });
+}
+
+export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
+  const { resolvedTheme } = useTheme();
+  const { t } = useLocale();
+  const gridTheme = resolvedTheme === "dark" ? darkGridTheme : lightGridTheme;
   const gridRef = useRef<AgGridReact<Job>>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [rowData, setRowData] = useState<Job[]>(data);
-  // Sync local state with prop data whenever it changes
-    // Synchronize local state with prop data whenever it changes
+
+  const updateRows = (next: Job[]) => {
+    setRowData(next);
+    onJobsChange?.(next);
+  };
+
   useEffect(() => {
     setRowData(data);
   }, [data]);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.log('JobGrid rowData:', rowData);
-    }
-  }, [rowData]);
 
   const [tempRowId, setTempRowId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [dirtyRowId, setDirtyRowId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const originalRowData = useRef<Job | null>(null);
-
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
-
-  const [columnDefs] = useState<ColDef<Job>[]>([
-    {
-      headerName: "#",
-      valueGetter: "node.rowIndex + 1",
-      suppressMovable: true,
-      pinned: "left",
-      maxWidth: 40,
-    },
-    {
-      headerName: "Company",
-      field: "company",
-      editable: true,
-    },
-    {
-      headerName: "Position",
-      field: "position",
-      editable: true,
-    },
-    {
-      headerName: "Type",
-      field: "type",
-      editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["Remote", "Office", "Hybrid"],
+  const columnDefs = useMemo<ColDef<Job>[]>(
+    () => [
+      {
+        headerName: "#",
+        valueGetter: "node.rowIndex + 1",
+        suppressMovable: true,
+        pinned: "left",
+        maxWidth: 40,
       },
-    },
-    {
-      headerName: "Applied Date",
-      field: "appliedDate",
-      editable: (params) => !!(params.data && params.data.id && params.data.id.toString().startsWith("temp_")),
-      cellEditor: "agDateCellEditor",
-      valueFormatter: (params) => {
-        return params.value || "";
+      {
+        headerName: "Company",
+        field: "company",
+        editable: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: cellContents.company },
       },
-      valueParser: (params) => {
-        if (!params.newValue) return null;
-        const d = new Date(params.newValue);
-        if (isNaN(d.getTime())) return null;
-        return d.toISOString().split("T")[0];
+      {
+        headerName: "Position",
+        field: "position",
+        editable: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: cellContents.position },
       },
-    },
-    { headerName: "Platform", field: "platform", editable: true },
-    {
-      headerName: "Status",
-      field: "status",
-      editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: cellContents.status,
+      {
+        headerName: "Type",
+        field: "type",
+        editable: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: ["Remote", "Office", "Hybrid"] },
       },
-    },
-    { headerName: "Location", field: "location", editable: true },
-    { headerName: "Salary", field: "salary", editable: true },
-    { headerName: "Notes", field: "notes", editable: true, flex: 2 },
-    { headerName: "Link", field: "applicationLink", editable: true },
-  ]);
+      {
+        headerName: "Applied Date",
+        field: "appliedDate",
+        editable: true,
+        cellEditor: "agDateCellEditor",
+        valueFormatter: (p) => p.value || "",
+        valueParser: (p) => {
+          if (!p.newValue) return null;
+          const d = new Date(p.newValue);
+          return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
+        },
+      },
+      { headerName: "Platform", field: "platform", editable: true },
+      {
+        headerName: "Status",
+        field: "status",
+        editable: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: cellContents.status },
+        cellRenderer: StatusCellRenderer,
+      },
+      { headerName: "Location", field: "location", editable: true },
+      { headerName: "Salary", field: "salary", editable: true },
+      {
+        headerName: t.dashboard.tags,
+        field: "tags",
+        editable: true,
+        valueGetter: (p) => (p.data?.tags ?? []).join(", "),
+        valueSetter: (p) => {
+          if (p.data) p.data.tags = parseTagsInput(p.newValue ?? "");
+          return true;
+        },
+      },
+      {
+        headerName: t.dashboard.nextFollowUp,
+        field: "nextFollowUpDate",
+        editable: true,
+        cellEditor: "agDateCellEditor",
+        cellRenderer: FollowUpCellRenderer,
+        valueParser: (p) => {
+          if (!p.newValue) return null;
+          const d = new Date(p.newValue);
+          return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
+        },
+      },
+      { headerName: "Notes", field: "notes", editable: true, flex: 2 },
+      {
+        headerName: "Link",
+        field: "applicationLink",
+        editable: true,
+        cellRenderer: LinkCellRenderer,
+      },
+    ],
+    [t]
+  );
 
   const defaultColDef = useMemo<ColDef<Job>>(
     () => ({
@@ -154,17 +275,14 @@ export default function JobGrid({ data }: Props) {
 
   const handleAddRow = () => {
     if (tempRowId) return;
-
     const today = new Date();
-    const todayString = `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     const newRow: Job = {
       id: `temp_${uuidv4()}`,
       company: "",
       position: "",
-      type: "Office", // default value
+      type: "Office",
       appliedDate: todayString,
       status: "Applied",
       platform: "",
@@ -172,22 +290,19 @@ export default function JobGrid({ data }: Props) {
       location: "undisclosed",
       salary: "0",
       notes: " ",
-      userid: "temp", // satisfies Job type, backend will set actual value
+      nextFollowUpDate: null,
+      tags: [],
+      userid: "temp",
     };
 
     setTempRowId(newRow.id);
-    setRowData(prev => [...prev, newRow]);
+    updateRows([...rowData, newRow]);
     setTimeout(() => {
-      const gridApi = gridRef.current?.api;
-      if (gridApi) {
-        const rowNode = gridApi.getRowNode(newRow.id);
-        if (rowNode && typeof rowNode.rowIndex === "number") {
-          gridApi.ensureNodeVisible(rowNode);
-          gridApi.startEditingCell({
-            rowIndex: rowNode.rowIndex,
-            colKey: "company"
-          });
-        }
+      const api = gridRef.current?.api;
+      const node = api?.getRowNode(newRow.id);
+      if (node && typeof node.rowIndex === "number") {
+        api?.ensureNodeVisible(node);
+        api?.startEditingCell({ rowIndex: node.rowIndex, colKey: "company" });
       }
     }, 0);
   };
@@ -195,152 +310,76 @@ export default function JobGrid({ data }: Props) {
   const handleSaveRow = async () => {
     if (!tempRowId) return;
     setIsSaving(true);
-
-    const gridApi = gridRef.current?.api;
-    if (!gridApi) {
+    const api = gridRef.current?.api;
+    if (!api) {
       setIsSaving(false);
       return;
     }
-
-    gridApi.stopEditing();
-    const rowNode = gridApi.getRowNode(tempRowId);
-    if (!rowNode || !rowNode.data) {
+    api.stopEditing();
+    const rowNode = api.getRowNode(tempRowId);
+    if (!rowNode?.data) {
       toast.error("Could not find the new row to save.");
+      setIsSaving(false);
       return;
     }
     try {
-      // Ensure type is present in payload
-      const payload = { ...rowNode.data, type: rowNode.data.type || "Office" };
-      console.log('🚀 Calling createJob with payload:', payload);
-      
-      const result = await createJob(payload);
-      console.log('📤 createJob result:', result);
-      
+      const result = await createJob({ ...rowNode.data, type: rowNode.data.type || "Office" });
       if (result.error) {
-        console.error('❌ createJob returned error:', result.error);
         toast.error("Failed to save job", { description: result.error });
       } else if (result.success && result.data) {
-        console.log('✅ Job saved successfully:', result.data);
         toast.success("Job saved successfully!");
-        if (rowNode.data) {
-          setRowData(prev => [
-            ...prev.filter(j => j.id !== rowNode.data!.id),
-            { ...result.data, type: ("type" in result.data ? (result.data as any).type : (rowNode.data && rowNode.data.type) || "Office") }
-          ]);
-        }
-        setTempRowId(null); // Hide Save/Cancel buttons
-      } else {
-        console.error('❌ Unexpected result format:', result);
-        toast.error("Unexpected response format from server");
+        updateRows([
+          ...rowData.filter((j) => j.id !== rowNode.data!.id),
+          result.data as Job,
+        ]);
+        setTempRowId(null);
       }
     } catch (error) {
-      console.error('❌ Exception in handleSaveRow:', error);
-      toast.error("An unexpected error occurred while saving: " + (error instanceof Error ? error.message : String(error)));
+      toast.error("An unexpected error occurred while saving.");
     } finally {
-      setIsSaving(false); // Ensure loading state is always turned off
+      setIsSaving(false);
     }
   };
 
   const handleCancelAdd = () => {
     if (!tempRowId) return;
-
-  setRowData(prev => prev.filter(j => j.id !== tempRowId));
-  setTempRowId(null);
+    updateRows(rowData.filter((j) => j.id !== tempRowId));
+    setTempRowId(null);
   };
 
   const onCellValueChanged = (event: CellValueChangedEvent<Job>) => {
-    // Prevent updating appliedDate for non-temp rows
-    if (event.colDef.field === "appliedDate" && !(event.data.id.toString().startsWith("temp_"))) {
-      const gridApi = gridRef.current?.api;
-      if (gridApi && originalRowData.current) {
-        gridApi.applyTransaction({ update: [{ ...event.data, appliedDate: originalRowData.current.appliedDate }] });
-      }
-      return;
-    }
-    // Always revert appliedDate to original value for non-temp rows
-    if (!event.data.id.toString().startsWith("temp_")) {
-      if (originalRowData.current && event.data.appliedDate !== originalRowData.current.appliedDate) {
-        const gridApi = gridRef.current?.api;
-        if (gridApi) {
-          gridApi.applyTransaction({ update: [{ ...event.data, appliedDate: originalRowData.current.appliedDate }] });
-        }
-      }
-    }
-    // Si es temp row, no marcar dirty
-    // If it is a temp row, do not mark as dirty
     if (event.data.id.toString().startsWith("temp_")) return;
-
-    // Si el campo cambiado es 'type' o cualquier otro editable, marcar dirty y guardar el estado original si no está
-    // If the changed field is 'type' or any other editable, mark as dirty and save the original state if not already set
     if (!dirtyRowId) {
       originalRowData.current = { ...event.data };
       setDirtyRowId(event.data.id);
-      return;
-    }
-    // Si ya está dirty, actualizar el estado original solo si el id cambió
-    // If already dirty, update the original state only if the id changed
-    if (dirtyRowId !== event.data.id) {
+    } else if (dirtyRowId !== event.data.id) {
       originalRowData.current = { ...event.data };
       setDirtyRowId(event.data.id);
-      return;
     }
-    // Si el valor de 'type' cambió, mantener dirty
-    // If the value of 'type' changed, keep dirty
-    if (event.colDef.field === "type") {
-      setDirtyRowId(event.data.id);
-      return;
-    }
-    // Para cualquier otro campo editable, mantener dirty
-    // For any other editable field, keep dirty
-    setDirtyRowId(event.data.id);
   };
 
   const handleUpdateRow = async () => {
     if (!dirtyRowId) return;
     setIsUpdating(true);
-    const gridApi = gridRef.current?.api;
-    if (!gridApi) {
-      setIsUpdating(false);
-      return;
-    }
-    const rowNode = gridApi.getRowNode(dirtyRowId);
-    if (!rowNode || !rowNode.data) {
+    const api = gridRef.current?.api;
+    const rowNode = api?.getRowNode(dirtyRowId);
+    if (!rowNode?.data) {
       toast.error("Could not find the row to update.");
       setIsUpdating(false);
       return;
     }
     try {
-      // Preserve only original appliedDate, use current values for other fields
-    // Preserve only the original appliedDate, use current values for other fields
-      let appliedDateValue = originalRowData.current?.appliedDate ?? rowNode.data.appliedDate;
-      if (appliedDateValue && appliedDateValue.length === 10) {
-        appliedDateValue = new Date(appliedDateValue).toISOString();
-      }
-      const updatePayload = {
-        ...rowNode.data,
-        appliedDate: appliedDateValue
-      };
-      const result = await updateJob(updatePayload);
+      const result = await updateJob(rowNode.data);
       if (result.error) {
         toast.error("Failed to update job", { description: result.error });
       } else if (result.success && result.data) {
         toast.success("Job updated successfully!");
-        // Actualiza el estado local rowData con el valor editado
-    // Update the local rowData state with the edited value
-        if (rowNode.data) {
-          setRowData(prev => prev.map(j =>
-            j.id === rowNode.data!.id
-              ? { ...result.data, type: rowNode.data!.type }
-              : j
-          ));
-        }
-        gridApi.applyTransaction({ update: [{ ...result.data, type: rowNode.data.type }] });
-        gridApi.refreshClientSideRowModel("sort");
+        updateRows(rowData.map((j) => (j.id === rowNode.data!.id ? (result.data as Job) : j)));
         setDirtyRowId(null);
         originalRowData.current = null;
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred while updating." + error);
+    } catch {
+      toast.error("An unexpected error occurred while updating.");
     } finally {
       setIsUpdating(false);
     }
@@ -348,26 +387,17 @@ export default function JobGrid({ data }: Props) {
 
   const handleCancelUpdate = () => {
     if (!dirtyRowId || !originalRowData.current) return;
-    const gridApi = gridRef.current?.api;
-    if (!gridApi) return;
-  // Revert the row to its original state, ensure type is present
-    // Revert the row to its original state, ensure type is present
-  gridApi.applyTransaction({ update: [{ ...originalRowData.current, type: originalRowData.current.type || "Office" }] });
-  setDirtyRowId(null);
-  originalRowData.current = null;
+    const api = gridRef.current?.api;
+    api?.applyTransaction({ update: [{ ...originalRowData.current }] });
+    setDirtyRowId(null);
+    originalRowData.current = null;
   };
 
   const handleDeleteRow = async () => {
     if (!selectedRowId) return;
     setIsDeleting(true);
-    const gridApi = gridRef.current?.api;
-    if (!gridApi) {
-      setIsDeleting(false);
-      return;
-    }
-    const rowNode = gridApi.getRowNode(selectedRowId);
-    if (!rowNode || !rowNode.data) {
-      toast.error("Could not find the row to delete.");
+    const rowNode = gridRef.current?.api?.getRowNode(selectedRowId);
+    if (!rowNode?.data) {
       setIsDeleting(false);
       return;
     }
@@ -377,121 +407,119 @@ export default function JobGrid({ data }: Props) {
         toast.error("Failed to delete job", { description: result.error });
       } else {
         toast.success("Job deleted successfully!");
-        if (rowNode.data) {
-          setRowData(prev => prev.filter(j => j.id !== rowNode.data!.id));
-        }
+        updateRows(rowData.filter((j) => j.id !== rowNode.data!.id));
         setSelectedRowId(null);
-        setConfirmDelete(false);
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred while deleting." + error);
+    } catch {
+      toast.error("An unexpected error occurred while deleting.");
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleExportCSV = () => {
-    const gridApi = gridRef.current?.api;
-    if (gridApi) {
-      gridApi.exportDataAsCsv({ fileName: "jobs.csv" });
-      toast.success("CSV downloaded!");
+    gridRef.current?.api?.exportDataAsCsv({ fileName: "jobs.csv" });
+    toast.success("CSV downloaded!");
+  };
+
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const rows = parseCsv(text);
+      const mapped = rows.map((r) => ({
+        company: r.company || r.Company || null,
+        position: r.position || r.Position || null,
+        type: r.type || r.Type || "Remote",
+        applicationLink: r.applicationLink || r.Link || r.link || null,
+        status: r.status || r.Status || "Applied",
+        appliedDate: r.appliedDate || r["Applied Date"] || null,
+        location: r.location || r.Location || null,
+        platform: r.platform || r.Platform || null,
+        salary: r.salary || r.Salary || null,
+        notes: r.notes || r.Notes || null,
+        nextFollowUpDate: r.nextFollowUpDate || r["Next follow-up"] || null,
+        tags: r.tags || r.Tags || "",
+      }));
+      const result = await importJobs(mapped);
+      if (result.error) {
+        toast.error(t.dashboard.importError, { description: result.error });
+      } else {
+        toast.success(t.dashboard.importSuccess.replace("{count}", String(result.imported ?? 0)));
+        window.location.reload();
+      }
+    } catch {
+      toast.error(t.dashboard.importError);
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const handleHideRow = () => {
-    setSelectedRowId(null);
-    setConfirmDelete(false);
-  };
-
-  const onRowClicked = (event: RowClickedEvent<Job>) => {
-    setSelectedRowId(event?.data?.id || null);
-    setConfirmDelete(false);
-  };
+  const selectedJob = rowData.find((j) => j.id === selectedRowId);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Action buttons */}
       <div className="flex flex-wrap items-center gap-2 md:gap-3">
         {!tempRowId && !dirtyRowId && (
           <GlowingButton onClick={handleAddRow} className="w-fit" variant="outline">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Job
+            <PlusCircle className="mr-2 h-4 w-4" /> {t.dashboard.addJob}
           </GlowingButton>
         )}
         {tempRowId && (
           <>
-            <GlowingButton
-              onClick={handleSaveRow}
-              disabled={isSaving}
-              className="w-fit"
-              variant="outline"
-            >
-              {isSaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="mr-2 h-4 w-4 text-green-600" />
-              )}
-              Save
+            <GlowingButton onClick={handleSaveRow} disabled={isSaving} className="w-fit" variant="outline">
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4 text-green-600" />}
+              {t.dashboard.save}
             </GlowingButton>
-            <GlowingButton
-              onClick={handleCancelAdd}
-              disabled={isSaving}
-              className="w-fit"
-              variant="ghost"
-            >
-              <X className="mr-2 h-4 w-4 text-red-600" /> Cancel
+            <GlowingButton onClick={handleCancelAdd} disabled={isSaving} className="w-fit" variant="ghost">
+              <X className="mr-2 h-4 w-4 text-red-600" /> {t.dashboard.cancel}
             </GlowingButton>
           </>
         )}
         {dirtyRowId && (
           <>
-            <GlowingButton
-              onClick={handleUpdateRow}
-              disabled={isUpdating}
-              className="w-fit"
-              variant="outline"
-            >
-              {isUpdating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="mr-2 h-4 w-4 text-green-600" />
-              )}
-              Update
+            <GlowingButton onClick={handleUpdateRow} disabled={isUpdating} className="w-fit" variant="outline">
+              {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4 text-green-600" />}
+              {t.dashboard.update}
             </GlowingButton>
-            <GlowingButton
-              onClick={handleCancelUpdate}
-              disabled={isUpdating}
-              className="w-fit"
-              variant="ghost"
-            >
-              <X className="mr-2 h-4 w-4 text-red-600" /> Cancel Update
+            <GlowingButton onClick={handleCancelUpdate} disabled={isUpdating} className="w-fit" variant="ghost">
+              <X className="mr-2 h-4 w-4 text-red-600" /> {t.dashboard.cancelUpdate}
             </GlowingButton>
           </>
         )}
         {selectedRowId && (
           <>
-            <GlowingButton
-              onClick={handleDeleteRow}
-              disabled={isDeleting}
-              className="w-fit text-red-600"
-              variant="ghost"
-            >
-              <Trash2 className="mr-2 h-4 w-4 text-red-600" /> Delete
+            <GlowingButton onClick={handleDeleteRow} disabled={isDeleting} className="w-fit text-red-600" variant="ghost">
+              <Trash2 className="mr-2 h-4 w-4 text-red-600" /> {t.dashboard.delete}
             </GlowingButton>
-            <GlowingButton
-              onClick={handleHideRow}
-              className="w-fit"
-              variant="ghost"
-            >
-              <X className="mr-2 h-4 w-4" /> Hide
+            {selectedJob && onShowHistory && (
+              <GlowingButton onClick={() => onShowHistory(selectedJob)} className="w-fit" variant="ghost">
+                <History className="mr-2 h-4 w-4" /> {t.dashboard.history}
+              </GlowingButton>
+            )}
+            <GlowingButton onClick={() => setSelectedRowId(null)} className="w-fit" variant="ghost">
+              <X className="mr-2 h-4 w-4" /> {t.dashboard.hide}
             </GlowingButton>
           </>
         )}
-        <Button onClick={handleExportCSV} variant="ghost" className="w-fit">
+        <Button onClick={handleExportCSV} variant="ghost" className="w-fit" title={t.dashboard.export}>
           <Download className="mr-2 h-4 w-4" />
         </Button>
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          variant="ghost"
+          className="w-fit"
+          disabled={isImporting}
+          title={t.dashboard.import}
+        >
+          {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+        </Button>
+        <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
       </div>
-      {/* Responsive table wrapper con altura mínima */}
-    {/* Responsive table wrapper with minimum height */}
+
       <div className="w-full overflow-x-auto">
         <div className="ag-theme-quartz min-w-[900px] min-h-[300px] h-[400px] sm:h-[500px]">
           <AgGridReact
@@ -499,13 +527,13 @@ export default function JobGrid({ data }: Props) {
             rowData={rowData}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
-            animateRows={true}
-            pagination={true}
-            theme={myTheme}
-            stopEditingWhenCellsLoseFocus={true}
-            getRowId={(params) => params.data.id}
+            animateRows
+            pagination
+            theme={gridTheme}
+            stopEditingWhenCellsLoseFocus
+            getRowId={(p) => p.data.id}
             onCellValueChanged={onCellValueChanged}
-            onRowClicked={onRowClicked}
+            onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
             suppressHorizontalScroll={false}
           />
         </div>

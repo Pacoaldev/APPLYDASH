@@ -2,16 +2,10 @@
 
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
-import { prisma } from "@/lib/prisma"; 
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ensureUserExists } from "@/lib/userService";
-
-
-// type JobInput = {
-//   appliedDate?: string | Date | null;
-//   [key: string]: unknown;
-// };
-
+import { getJobStatusHistory } from "@/lib/jobService";
 
 const jobSchema = z.object({
   company: z.string().nullable().optional(),
@@ -19,19 +13,26 @@ const jobSchema = z.object({
   type: z.string().nullable().optional(),
   applicationLink: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
-  appliedDate: z.string().nullable().optional(), 
+  appliedDate: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   platform: z.string().nullable().optional(),
   salary: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  nextFollowUpDate: z.string().nullable().optional(),
+  tags: z.union([z.array(z.string()), z.string()]).nullable().optional(),
 });
 
-function addOneDay(dateStr: string): Date {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + 1);
-  return d; // return as JS Date object for Prisma
+function parseTags(tags: string | string[] | null | undefined): string[] {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags.map((t) => t.trim()).filter(Boolean);
+  return tags.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
+function parseDateField(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
 
 function formatDateForDisplay(date: Date): string {
   const year = date.getFullYear();
@@ -40,82 +41,81 @@ function formatDateForDisplay(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function normalizeAppliedDate(data: unknown): Record<string, unknown> {
-  if (
-    data &&
-    typeof data === "object" &&
-    "appliedDate" in data &&
-    data.appliedDate instanceof Date
-  ) {
-    const d = data.appliedDate as Date;
-    (data as Record<string, unknown>).appliedDate = isNaN(d.getTime())
-      ? null
-      : d.toISOString().split("T")[0];
-  }
-  return data as Record<string, unknown>;
+function formatJob(job: {
+  id: string;
+  userid: string;
+  company: string | null;
+  position: string | null;
+  type: string | null;
+  applicationLink: string | null;
+  status: string | null;
+  appliedDate: Date | null;
+  location: string | null;
+  platform: string | null;
+  salary: string | null;
+  notes: string | null;
+  nextFollowUpDate: Date | null;
+  tags: string[];
+}) {
+  return {
+    ...job,
+    appliedDate: job.appliedDate ? formatDateForDisplay(job.appliedDate) : null,
+    nextFollowUpDate: job.nextFollowUpDate
+      ? formatDateForDisplay(job.nextFollowUpDate)
+      : null,
+    tags: job.tags ?? [],
+  };
+}
+
+async function requireUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
 }
 
 export async function createJob(data: unknown) {
-  console.log('🚀 createJob called with data:', data);
-  
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await requireUser();
+  if (!user) return { error: "You must be logged in to add a job." };
 
-  console.log('👤 User from Supabase:', user ? 'authenticated' : 'not authenticated');
-
-  if (!user) {
-    console.log('❌ No user found, returning error');
-    return { error: "You must be logged in to add a job." };
-  }
-
-  console.log('🔍 Normalizing data...');
-  const normalizedData = normalizeAppliedDate(data);
-  console.log('📊 Normalized data:', normalizedData);
-
-  const validation = jobSchema.safeParse(normalizedData);
+  const validation = jobSchema.safeParse(data);
   if (!validation.success) {
-    console.log('❌ Validation failed:', validation.error.issues);
     return { error: "Invalid data provided. Please check the fields." };
   }
 
-  console.log('✅ Validation successful:', validation.data);
-  const { appliedDate, ...jobData } = validation.data;
+  const { appliedDate, nextFollowUpDate, tags, ...jobData } = validation.data;
 
   try {
-    console.log('💾 Creating job in database...');
-    console.log('📅 Applied date:', appliedDate);
-    console.log('👤 User ID:', user.id);
-    console.log('📋 Job data:', jobData);
-
-    // Ensure user exists in our database before creating job
-    console.log('🔄 Ensuring user exists in database...');
     await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
 
     const newJob = await prisma.job.create({
       data: {
         ...jobData,
-        appliedDate: appliedDate ? addOneDay(appliedDate) : null,
-        userid: user.id, // Prisma field name, mapped to userid in DB
+        appliedDate: parseDateField(appliedDate),
+        nextFollowUpDate: parseDateField(nextFollowUpDate),
+        tags: parseTags(tags),
+        userid: user.id,
       },
     });
 
-    console.log('✅ Job created successfully:', newJob);
+    if (newJob.status) {
+      await prisma.jobStatusHistory.create({
+        data: {
+          jobId: newJob.id,
+          oldStatus: null,
+          newStatus: newJob.status,
+        },
+      });
+    }
 
     revalidatePath("/dashboard");
-
-    const result = {
-      success: true,
-      data: {
-        ...newJob,
-        appliedDate: newJob.appliedDate ? formatDateForDisplay(newJob.appliedDate) : null,
-      },
-    };
-
-    console.log('📤 Returning result:', result);
-    return result;
+    return { success: true, data: formatJob(newJob) };
   } catch (error) {
-    console.error("❌ Failed to create job:", error);
-    return { error: `Database error: Could not save the job. ${error instanceof Error ? error.message : 'Unknown error'}` };
+    console.error("Failed to create job:", error);
+    return {
+      error: `Database error: Could not save the job. ${error instanceof Error ? error.message : "Unknown error"}`,
+    };
   }
 }
 
@@ -124,79 +124,120 @@ const updateJobSchema = jobSchema.extend({
 });
 
 export async function updateJob(data: unknown) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await requireUser();
+  if (!user) return { error: "Authentication required." };
 
-  if (!user) {
-    return { error: "Authentication required." };
-  }
-
-
-  // if (typeof data === "object" && data !== null && "appliedDate" in data) {
-  //   const draft = data as { appliedDate?: unknown };
-
-  //   if (isDate(draft.appliedDate)) {
-  //     const d = draft.appliedDate;
-  //     if (isNaN(d.getTime())) {
-  //       draft.appliedDate = null;
-  //     } else {
-  //       draft.appliedDate = formatDateForDisplay(d);
-  //     }
-  //   }
-  // }
-
-  const validation = updateJobSchema.safeParse(normalizeAppliedDate(data));
+  const validation = updateJobSchema.safeParse(data);
   if (!validation.success) {
-    console.error("Zod validation failed:", validation.error.issues);
     return { error: "Invalid data for update." };
   }
 
-  const { id, appliedDate, ...jobData } = validation.data;
+  const { id, appliedDate, nextFollowUpDate, tags, ...jobData } = validation.data;
 
   try {
+    const existing = await prisma.job.findFirst({
+      where: { id, userid: user.id },
+    });
+    if (!existing) return { error: "Job not found." };
+
     const updatedJob = await prisma.job.update({
-      where: {
-        id: id,
-      },
+      where: { id },
       data: {
         ...jobData,
-        appliedDate: appliedDate ? appliedDate : null,
+        appliedDate: parseDateField(appliedDate),
+        nextFollowUpDate: parseDateField(nextFollowUpDate),
+        tags: tags !== undefined ? parseTags(tags) : undefined,
       },
     });
 
+    if (existing.status !== updatedJob.status) {
+      await prisma.jobStatusHistory.create({
+        data: {
+          jobId: id,
+          oldStatus: existing.status,
+          newStatus: updatedJob.status,
+        },
+      });
+    }
+
     revalidatePath("/dashboard");
-    return {
-      success: true,
-      data: {
-        ...updatedJob,
-  // appliedDate: updatedJob.appliedDate ? updatedJob.appliedDate.toISOString().split('T')[0] : null,
-          appliedDate: updatedJob.appliedDate ? formatDateForDisplay(updatedJob.appliedDate) : null,
-      },
-    };
+    return { success: true, data: formatJob(updatedJob) };
   } catch (error) {
     console.error("Failed to update job:", error);
     return { error: "Database error: Could not update the job." };
   }
 }
 
-
 export async function deleteJob(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "Authentication required." };
-  }
+  const user = await requireUser();
+  if (!user) return { error: "Authentication required." };
 
   try {
-    await prisma.job.delete({
-      where: { id },
+    const existing = await prisma.job.findFirst({
+      where: { id, userid: user.id },
     });
+    if (!existing) return { error: "Job not found." };
 
+    await prisma.job.delete({ where: { id } });
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete job:", error);
     return { error: "Database error: Could not delete the job." };
   }
+}
+
+export async function fetchStatusHistory(jobId: string) {
+  const user = await requireUser();
+  if (!user) return { error: "Authentication required." };
+  const history = await getJobStatusHistory(jobId, user.id);
+  return { success: true, data: history };
+}
+
+const importRowSchema = jobSchema;
+
+export async function importJobs(rows: unknown[]) {
+  const user = await requireUser();
+  if (!user) return { error: "Authentication required." };
+
+  await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
+
+  let imported = 0;
+  const errors: string[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const validation = importRowSchema.safeParse(rows[i]);
+    if (!validation.success) {
+      errors.push(`Row ${i + 1}: invalid data`);
+      continue;
+    }
+
+    const { appliedDate, nextFollowUpDate, tags, ...jobData } = validation.data;
+    try {
+      const job = await prisma.job.create({
+        data: {
+          ...jobData,
+          appliedDate: parseDateField(appliedDate),
+          nextFollowUpDate: parseDateField(nextFollowUpDate),
+          tags: parseTags(tags),
+          userid: user.id,
+        },
+      });
+      if (job.status) {
+        await prisma.jobStatusHistory.create({
+          data: { jobId: job.id, oldStatus: null, newStatus: job.status },
+        });
+      }
+      imported++;
+    } catch {
+      errors.push(`Row ${i + 1}: database error`);
+    }
+  }
+
+  revalidatePath("/dashboard");
+  return {
+    success: true,
+    imported,
+    errors: errors.length ? errors : undefined,
+  };
 }

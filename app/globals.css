@@ -27,8 +27,16 @@ body {
   scrollbar-color: rgba(100, 100, 100, 0.3) transparent;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(180, 180, 180, 0.3);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(180, 180, 180, 0.5);
+}
+.dark * {
+  scrollbar-color: rgba(180, 180, 180, 0.3) transparent;
+}
 
-.ag-root-wrapper-body,
 .ag-body-horizontal-scroll,
 .ag-paging-panel {
   overflow-x: hidden !important;

@@ -1,6 +1,6 @@
 # APPLYDASH
 
-Track your job applications with style and precision. Watch your career opportunities come to life.
+Track your job applications with style and precision. Organize your pipeline, measure your progress, and never miss a follow-up.
 
 🚀 **Live App:** [https://applydash.vercel.app](https://applydash.vercel.app/)
 
@@ -8,37 +8,70 @@ Track your job applications with style and precision. Watch your career opportun
 
 ## ✨ Features
 
-- **Smart Job Tracking** - Organize applications with status updates, deadlines, and notes
-- **Interactive Dashboard** - Visualize your job search progress with charts and metrics
-- **User Authentication** - Secure login and admin controls via Supabase
-- **Modern UI** - Clean interface built with Tailwind CSS and Radix UI
-- **Data Management** - Powerful table views with AG Grid
-- **Responsive Design** - Works seamlessly on desktop and mobile
+### Dashboard
+
+- **Statistics panel** — Total applications, response rate, interviews, offers, rejections, and overdue follow-ups
+- **Quick filters** — All, This week, Interviewing, No response 14+ days, Follow-up due, Offers
+- **Table view** — Editable AG Grid with sorting, filtering, and pagination
+- **Kanban view** — Visual pipeline by status with drag-and-drop and inline status changes
+- **Status colors** — Color-coded badges for every application stage
+- **Clickable links** — Open job postings directly from the grid
+- **Company & position suggestions** — Dropdown autocomplete from curated lists
+- **Tags** — Comma-separated labels per job (e.g. `Frontend, Remote EU`)
+- **Follow-up reminders** — `nextFollowUpDate` with visual alerts when due
+- **Status history** — Automatic log of every status change per application
+- **CSV export & import** — Back up or bulk-import your applications
+
+### App experience
+
+- **Light / dark / system theme** — Toggle in the navbar (persists in `localStorage`)
+- **English & Spanish UI** — Language switcher (`EN` / `ES`) across landing and dashboard
+- **Toast notifications** — Real-time feedback via Sonner on save, update, delete, and import
+- **Responsive design** — Works on desktop and mobile
+
+### Authentication & data
+
+- **User auth** — Supabase (register, login, password reset)
+- **Admin panel** — Separate JWT-based admin login at `/admin`
+- **Secure storage** — PostgreSQL via Prisma; jobs scoped per user
+
+### Browser extension
+
+Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, and other sites directly into your dashboard. See [`extension/README.md`](extension/README.md) for install instructions.
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Radix UI
-- **Backend**: Prisma ORM 6, PostgreSQL
-- **Authentication**: Supabase Auth
-- **Data Grid**: AG Grid
-- **Deployment**: Vercel (Hobby tier)
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16, React 19 |
+| Styling | Tailwind CSS v4, shadcn/ui, Radix UI |
+| Data grid | AG Grid Community v34 |
+| ORM | Prisma 6 |
+| Database | PostgreSQL (Supabase) |
+| Auth | Supabase Auth + JWT (admin) |
+| Validation | Zod + react-hook-form |
+| Notifications | Sonner |
+| Deployment | Vercel |
 
 ## 🏗️ Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
-- PostgreSQL database (via Supabase)
-- Supabase account
+- PostgreSQL database (Supabase recommended)
+- Supabase project for authentication
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Pacoaldev/APPLYDASH.git
    cd APPLYDASH
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -46,6 +79,7 @@ Track your job applications with style and precision. Watch your career opportun
 3. **Set up environment variables**
 
    Copy `.env.example` to `.env.local` and fill in the values:
+
    ```bash
    cp .env.example .env.local
    ```
@@ -58,89 +92,178 @@ Track your job applications with style and precision. Watch your career opportun
    # Site URL
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-   # Database — use Transaction pooler URL from Supabase (port 6543)
+   # Database — Transaction pooler (port 6543) for serverless / production
    DATABASE_URL=postgresql://postgres.xxxx:[PASSWORD]@aws-0-eu-west-2.pooler.supabase.com:6543/postgres
 
-   # Direct connection — used by Prisma migrations (port 5432)
+   # Direct connection (port 5432) — used by Prisma migrations
    DIRECT_URL=postgresql://postgres:[PASSWORD]@db.xxxx.supabase.co:5432/postgres
 
-   # JWT Secret (from Supabase → Settings → API → JWT Settings)
+   # JWT Secret (Supabase → Settings → API → JWT Settings)
    JWT_SECRET=your_jwt_secret
    ```
 
-   > ⚠️ Never commit your `.env.local` file to version control
+   > ⚠️ Never commit `.env.local` to version control.
 
-4. **Run database migrations**
+4. **Initialize the database**
+
+   Generate the Prisma client:
+
+   ```bash
+   npx prisma generate
+   ```
+
+   Bootstrap tables (recommended for new setups):
+
+   ```bash
+   curl -X POST http://localhost:3000/api/migrate
+   ```
+
+   Or, if you use versioned Prisma migrations:
+
    ```bash
    npx prisma migrate dev
    ```
 
-5. **Start development server**
+5. **Start the development server**
+
    ```bash
    npm run dev
    ```
 
-Visit [http://localhost:3000](http://localhost:3000) to see your application.
+   Visit [http://localhost:3000](http://localhost:3000).
+
+## 📊 Data model
+
+### Job fields
+
+| Field | Description |
+|-------|-------------|
+| `company` | Company name |
+| `position` | Role / job title |
+| `type` | `Remote`, `Office`, or `Hybrid` |
+| `status` | Pipeline stage (Applied, Interview, Offer, Rejected, …) |
+| `appliedDate` | Date you applied |
+| `platform` | Where you found the job (LinkedIn, Indeed, …) |
+| `applicationLink` | URL to the posting |
+| `location` | Job location |
+| `salary` | Salary info (free text) |
+| `notes` | Personal notes |
+| `tags` | Array of labels |
+| `nextFollowUpDate` | Reminder date for follow-up |
+
+### Status history
+
+Every create and status change writes a row to `job_status_history` (`oldStatus`, `newStatus`, `changedAt`). View it from the dashboard via the **History** button on a selected row.
+
+## 🧩 Browser extension
+
+1. Open `chrome://extensions` → enable **Developer mode**
+2. **Load unpacked** → select the `extension/` folder
+3. If icons look generic, run `node scripts/generate-extension-icons.mjs` and click **Reload** on the extension
+3. Log in to ApplyDash in the same browser
+4. Open a job posting → click the extension icon → **Save to ApplyDash**
+
+The extension calls `POST /api/jobs` with your session cookie. Configure your instance URL in the popup (e.g. `http://localhost:3000` or `https://applydash.vercel.app`).
 
 ## ☁️ Deploying to Vercel
 
-This project is configured for Vercel. No custom build settings are needed — Vercel auto-detects Next.js.
+Configured for Vercel — no custom build settings required.
 
-### Environment Variables in Vercel
+### Environment variables
 
 Add these in **Vercel → Settings → Environment Variables**:
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable/anon key |
-| `NEXT_PUBLIC_SITE_URL` | Your Vercel deployment URL (e.g. `https://applydash.vercel.app`) |
-| `DATABASE_URL` | **Transaction pooler** URL from Supabase (port `6543`) — required for Vercel serverless |
-| `DIRECT_URL` | **Direct connection** URL from Supabase (port `5432`) — used by Prisma migrations |
-| `JWT_SECRET` | JWT secret from Supabase → Settings → API |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `NEXT_PUBLIC_SITE_URL` | Deployment URL (e.g. `https://applydash.vercel.app`) |
+| `DATABASE_URL` | **Transaction pooler** URL (port `6543`) |
+| `DIRECT_URL` | **Direct** connection URL (port `5432`) |
+| `JWT_SECRET` | JWT secret from Supabase |
 
-> ⚠️ Vercel serverless functions cannot use direct PostgreSQL connections (port 5432). Always use the **Transaction pooler** URL for `DATABASE_URL`.
+> ⚠️ Serverless functions must use the **transaction pooler** for `DATABASE_URL`, not the direct connection.
 
-### Supabase Auth Configuration
+### Supabase auth URLs
 
-In **Supabase → Authentication → URL Configuration**, set:
+In **Supabase → Authentication → URL Configuration**:
+
 - **Site URL**: `https://applydash.vercel.app`
 - **Redirect URLs**: `https://applydash.vercel.app/**`
 
-### First Deploy
+### Post-deploy migration
 
-1. Push to GitHub — Vercel deploys automatically on every push to `main`
-2. After the first deploy, run migrations if needed:
-   ```bash
-   npx prisma migrate deploy
-   ```
+After the first deploy, apply schema updates:
 
-## 🛠️ Available Scripts
+```bash
+curl -X POST https://applydash.vercel.app/api/migrate
+```
+
+Or:
+
+```bash
+npm run migrate:deploy
+```
+
+## 🛠️ Available scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server (Turbopack) |
-| `npm run build` | Create production build |
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Production build |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
-| `npx prisma studio` | Open Prisma database browser |
-| `npx prisma migrate dev` | Run migrations in development |
-| `npx prisma migrate deploy` | Run migrations in production |
+| `npm run check-env` | Validate required env vars |
+| `npm run build:strict` | Check env + build |
+| `npm run migrate:deploy` | Run Prisma migrations (production) |
+| `npm run migrate:prod` | Production migration script |
+| `npx prisma generate` | Generate Prisma client |
+| `npx prisma studio` | Open database browser |
 
-## 📁 Project Structure
+## 📁 Project structure
 
 ```
 APPLYDASH/
-├── app/              # Next.js app directory (pages & API routes)
-├── components/       # Reusable UI components
-├── lib/              # Shared utilities and services
-├── prisma/           # Database schema and migrations
-├── public/           # Static assets
-├── scripts/          # Utility scripts
-├── utils/            # Helper functions
-├── validation/       # Zod validation schemas
-└── data/             # Sample/seed data
+├── app/
+│   ├── (auth)/           # Login, register, password reset
+│   ├── (admin)/          # Admin auth & dashboard
+│   ├── api/
+│   │   ├── jobs/         # Extension & external job creation
+│   │   └── migrate/      # Database bootstrap / schema updates
+│   └── dashboard/        # Main user dashboard (server page + actions)
+├── components/
+│   ├── job-dashboard.tsx # Stats, filters, view toggle
+│   ├── jobGrid.tsx       # AG Grid table
+│   ├── job-kanban.tsx    # Kanban pipeline
+│   ├── dashboard-stats.tsx
+│   ├── quick-filters.tsx
+│   ├── status-history-panel.tsx
+│   ├── theme-provider.tsx
+│   ├── locale-provider.tsx
+│   └── ui/               # shadcn primitives
+├── extension/            # Chrome extension (job capture)
+├── lib/
+│   ├── jobService.ts     # Job queries
+│   ├── job-utils.ts      # Filters, stats, status colors
+│   └── i18n/             # EN / ES translations
+├── prisma/
+│   └── schema.prisma     # User, Job, JobStatusHistory, Admin
+├── data/
+│   └── cellContents.ts   # Autocomplete lists (company, position, status)
+├── types/
+│   └── job.ts            # TypeScript interfaces
+├── utils/supabase/       # Supabase clients & middleware
+└── validation/           # Zod schemas
 ```
+
+## 🎨 Theming & i18n
+
+| Preference | Storage key | Options |
+|------------|-------------|---------|
+| Theme | `applydash-theme` | `light`, `dark`, `system` |
+| Language | `applydash-locale` | `en`, `es` |
+
+Theme uses CSS variables in `app/globals.css` (shadcn `.dark` class). Language strings live in `lib/i18n/translations.ts`.
 
 ## 🤝 Contributing
 
@@ -152,12 +275,12 @@ APPLYDASH/
 
 ## 📄 License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE).
 
 ## 🙋‍♂️ Support
 
-If you have questions or need help:
-- Open an [issue](https://github.com/Pacoaldev/APPLYDASH/issues)
+- [Open an issue](https://github.com/Pacoaldev/APPLYDASH/issues)
+- Deployment alternatives: see [DEPLOYMENT.md](DEPLOYMENT.md) (DigitalOcean)
 
 ---
 

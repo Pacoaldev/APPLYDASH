@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: system-ui, sans-serif; width: 320px; padding: 16px; margin: 0; }
+    h1 { font-size: 16px; margin: 0 0 12px; color: #1e40af; }
+    label { display: block; font-size: 12px; margin-bottom: 4px; color: #555; }
+    input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: linear-gradient(to right, #3b82f6, #4f46e5); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #status { font-size: 12px; margin-top: 8px; text-align: center; }
+    .hint { font-size: 11px; color: #888; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <h1><img src="icons/icon-32.png" alt="" width="24" height="24" style="vertical-align:middle;margin-right:8px" />ApplyDash</h1>
+  <p class="hint">Set your ApplyDash URL in extension storage (default: production URL).</p>
+  <label>ApplyDash URL</label>
+  <input id="baseUrl" type="url" placeholder="https://your-applydash.vercel.app" />
+  <label>Company</label>
+  <input id="company" />
+  <label>Position</label>
+  <input id="position" />
+  <label>Platform</label>
+  <input id="platform" />
+  <label>Status</label>
+  <select id="status">
+    <option>Applied</option>
+    <option>Pending</option>
+    <option>Interview</option>
+  </select>
+  <button id="save">Save to ApplyDash</button>
+  <p id="status"></p>
+  <script src="popup.js"></script>
+</body>
+</html>

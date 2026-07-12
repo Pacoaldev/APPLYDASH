@@ -4,6 +4,9 @@ import "./globals.css";
 import ClientNavbarWrapper from "@/components/ClientNavbarWrapper";
 import { ErrorBoundary } from "@/components/error-boundary";
 import Footer from "@/components/footer";
+import { ThemeProvider } from "@/components/theme-provider";
+import { LocaleProvider } from "@/components/locale-provider";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,20 +28,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("applydash-theme");var dark=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(dark)document.documentElement.classList.add("dark");}catch(e){}})();`,
+          }}
+        />
         <script src="/env-config.js" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        <ErrorBoundary>
-          <ClientNavbarWrapper/>
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-        </ErrorBoundary>
+        <ThemeProvider>
+          <LocaleProvider>
+            <ErrorBoundary>
+              <ClientNavbarWrapper />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+            </ErrorBoundary>
+            <Toaster richColors position="top-right" closeButton />
+          </LocaleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

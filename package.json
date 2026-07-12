@@ -12,7 +12,8 @@
     "build:strict": "node scripts/check-env.js && next build",
     "build:vercel": "next build",
     "migrate:deploy": "prisma migrate deploy",
-    "migrate:prod": "node scripts/migrate-production.js"
+    "migrate:prod": "node scripts/migrate-production.js",
+    "extension:icons": "node scripts/generate-extension-icons.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
