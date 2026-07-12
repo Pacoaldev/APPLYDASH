@@ -62,6 +62,27 @@ export async function POST() {
         FOREIGN KEY ("userid") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
       EXCEPTION
         WHEN duplicate_object THEN null;
+      END $$;`,
+
+      // v2: follow-up, tags
+      `ALTER TABLE "jobs" ADD COLUMN IF NOT EXISTS "nextfollowupdate" DATE;`,
+      `ALTER TABLE "jobs" ADD COLUMN IF NOT EXISTS "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];`,
+
+      // Status history table
+      `CREATE TABLE IF NOT EXISTS "job_status_history" (
+        "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+        "jobid" UUID NOT NULL,
+        "oldstatus" TEXT,
+        "newstatus" TEXT,
+        "changedat" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "job_status_history_pkey" PRIMARY KEY ("id")
+      );`,
+
+      `DO $$ BEGIN
+        ALTER TABLE "job_status_history" ADD CONSTRAINT "job_status_history_jobid_fkey"
+        FOREIGN KEY ("jobid") REFERENCES "jobs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+      EXCEPTION
+        WHEN duplicate_object THEN null;
       END $$;`
     ];
     
@@ -79,7 +100,7 @@ export async function POST() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('users', 'jobs', 'Admin')
+      AND table_name IN ('users', 'jobs', 'Admin', 'job_status_history')
     `;
     
     console.log('📊 Tables found:', tables);

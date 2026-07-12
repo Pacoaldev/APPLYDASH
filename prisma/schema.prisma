@@ -1,6 +1,6 @@
-  generator client {
-    provider = "prisma-client-js"
-  }
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider  = "postgresql"
@@ -25,7 +25,7 @@ model Job {
   id               String    @id @default(uuid()) @db.Uuid
   userid           String    @db.Uuid @map("userid")
   company          String?
-  position         String?  
+  position         String?
   type             String?   @default("Remote")
   applicationLink  String?   @map("applicationlink")
   status           String?   @default("Applied")
@@ -34,13 +34,28 @@ model Job {
   platform         String?
   salary           String?   @default("0")
   notes            String?   @default(" ")
+  nextFollowUpDate DateTime? @db.Date @map("nextfollowupdate")
+  tags             String[]  @default([])
 
-  user User @relation(fields: [userid], references: [id])
-  
+  user          User                @relation(fields: [userid], references: [id])
+  statusHistory JobStatusHistory[]
+
   @@map("jobs")
   @@schema("public")
 }
 
+model JobStatusHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  jobId     String   @db.Uuid @map("jobid")
+  oldStatus String?  @map("oldstatus")
+  newStatus String?  @map("newstatus")
+  changedAt DateTime @default(now()) @map("changedat")
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_status_history")
+  @@schema("public")
+}
 
 enum AdminRole {
   SUPER_ADMIN

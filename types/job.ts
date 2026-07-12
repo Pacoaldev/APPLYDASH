@@ -1,40 +1,35 @@
-// export interface Job {
-//   id: string;
-//   company: string;
-//   title: string;
-//   appliedDate: string;
-//   platform: string;
-//   status: 'Applied' | 'Interviewing' | 'Rejected' | 'Offer';
-//   notes?: string;
-// }
+export interface JobStatusHistoryEntry {
+  id: string;
+  jobId: string;
+  oldStatus: string | null;
+  newStatus: string | null;
+  changedAt: string;
+}
 
-
-// This interface should match the fields in your Prisma `Job` model
 export interface Job {
   id: string;
   userid: string;
   company: string | null;
   position: string | null;
-  type: string | null; // Remote, Office, Hybrid, etc.
+  type: string | null;
   applicationLink: string | null;
-  status: string | null; 
+  status: string | null;
   appliedDate: string | null;
   location: string | null;
   platform: string | null;
   salary: string | null;
   notes: string | null;
+  nextFollowUpDate: string | null;
+  tags: string[];
+  statusHistory?: JobStatusHistoryEntry[];
 }
 
-// export type Job = {
-//   id: string;
-//   userid: string;
-//   company: string | null;
-//   position: string | null;  // <-- Prisma uses position
-//   applicationLink: string | null;
-//   status: 'Applied' | 'Interviewing' | 'Rejected' | 'Offer';
-//   applieddate: string | null; // Date comes as ISO string
-//   location: string | null;
-//   platform: string | null;
-//   salary: string | null;
-//   notes: string | null;
-//   };
+export type JobFilter =
+  | "all"
+  | "thisWeek"
+  | "interviewing"
+  | "noResponse14"
+  | "followUpDue"
+  | "offers";
+
+export type DashboardView = "table" | "kanban";
