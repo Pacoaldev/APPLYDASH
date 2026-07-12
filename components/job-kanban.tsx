@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Job } from "@/types/job";
-import { KANBAN_COLUMNS, getStatusStyle, isFollowUpDue } from "@/lib/job-utils";
+import { KANBAN_COLUMNS, getStatusStyle, isFollowUpDue, displayStatus, canonicalStatus } from "@/lib/job-utils";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { ExternalLink, History, Bell } from "lucide-react";
+import cellContents from "@/data/cellContents";
 
 type Props = {
   jobs: Job[];
@@ -15,7 +16,7 @@ type Props = {
 };
 
 export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const columnLabels: Record<string, string> = {
@@ -25,8 +26,10 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
     Rejected: t.dashboard.kanbanColumns.rejected,
   };
 
+  const statusOptions = locale === "es" ? cellContents.statusEs : cellContents.status;
+
   const getColumnJobs = (statuses: readonly string[]) =>
-    jobs.filter((j) => j.status && statuses.includes(j.status));
+    jobs.filter((j) => j.status && statuses.includes(canonicalStatus(j.status)));
 
   const handleDrop = async (targetStatus: string) => {
     if (!draggingId) return;
@@ -84,28 +87,36 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
                   </div>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className={`px-2 py-0.5 rounded-full text-xs ${style.bg} ${style.text}`}>
-                      {job.status}
+                      {displayStatus(job.status, locale)}
                     </span>
                     {job.tags?.slice(0, 2).map((tag) => (
                       <span key={tag} className="text-xs bg-muted px-1.5 py-0.5 rounded">{tag}</span>
                     ))}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <input
-                      type="text"
-                      defaultValue={job.status ?? ""}
-                      onBlur={async (e) => {
-                        const newStatus = e.target.value.trim();
-                        if (!newStatus || newStatus === (job.status ?? "")) return;
-                        const result = await updateJob({ ...job, status: newStatus });
+                    <select
+                      key={`${job.id}-${job.status}-${locale}`}
+                      defaultValue={displayStatus(job.status, locale)}
+                      onChange={async (e) => {
+                        const stored = canonicalStatus(e.target.value) || e.target.value;
+                        if (!stored || stored === (job.status ?? "")) return;
+                        const result = await updateJob({ ...job, status: stored });
                         if (result.success && result.data) {
                           onJobsChange(jobs.map((j) => (j.id === job.id ? { ...j, ...result.data } : j)));
                           toast.success(t.dashboard.statusUpdated);
                         }
                       }}
                       className="text-xs border border-border rounded px-1.5 py-0.5 bg-background min-w-[80px] flex-1"
-                      placeholder={t.dashboard.columns.status}
-                    />
+                    >
+                      <option value="" disabled>
+                        {t.dashboard.columns.status}
+                      </option>
+                      {statusOptions.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
                     {job.applicationLink && (
                       <a
                         href={job.applicationLink}

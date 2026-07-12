@@ -1,4 +1,45 @@
 import { Job, JobFilter } from "@/types/job";
+import type { Locale } from "@/lib/i18n/translations";
+
+export const STATUS_ES_TO_EN: Record<string, string> = {
+  Aplicado: "Applied",
+  Entrevista: "Interview",
+  Rechazado: "Rejected",
+  Pendiente: "Pending",
+  Oferta: "Offer",
+  Negociando: "Negotiating",
+  Aceptado: "Accepted",
+  Retirado: "Withdrawn",
+  "En espera": "On Hold",
+  Seguimiento: "Follow Up",
+  "Llamada telefónica": "Phone Screen",
+  "Prueba técnica": "Technical Round",
+  "Entrevista final": "Final Round",
+};
+
+const STATUS_EN_TO_ES: Record<string, string> = Object.fromEntries(
+  Object.entries(STATUS_ES_TO_EN).map(([es, en]) => [en, es])
+);
+
+export function canonicalStatus(status: string | null | undefined): string {
+  if (!status) return "";
+  return STATUS_ES_TO_EN[status] ?? status;
+}
+
+export function displayStatus(
+  status: string | null | undefined,
+  locale: Locale = "en"
+): string {
+  if (!status) return "—";
+  const en = canonicalStatus(status);
+  if (locale === "es") return STATUS_EN_TO_ES[en] ?? status;
+  return en;
+}
+
+function hasStatus(status: string | null | undefined, candidates: readonly string[]): boolean {
+  const key = canonicalStatus(status);
+  return Boolean(key && candidates.includes(key));
+}
 
 export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Applied: { bg: "bg-blue-100 dark:bg-blue-900/40", text: "text-blue-700 dark:text-blue-300" },
@@ -33,7 +74,7 @@ export const KANBAN_COLUMNS = [
 
 export function getStatusStyle(status: string | null) {
   if (!status) return { bg: "bg-muted", text: "text-muted-foreground" };
-  return STATUS_COLORS[status] ?? { bg: "bg-muted", text: "text-muted-foreground" };
+  return STATUS_COLORS[canonicalStatus(status)] ?? { bg: "bg-muted", text: "text-muted-foreground" };
 }
 
 export function parseDate(value: string | null): Date | null {
@@ -72,19 +113,17 @@ export function filterJobs(jobs: Job[], filter: JobFilter): Job[] {
     case "thisWeek":
       return jobs.filter((j) => isThisWeek(j.appliedDate));
     case "interviewing":
-      return jobs.filter((j) => j.status && INTERVIEW_STATUSES.includes(j.status));
+      return jobs.filter((j) => hasStatus(j.status, INTERVIEW_STATUSES));
     case "noResponse14":
       return jobs.filter(
         (j) =>
-          (j.status === "Applied" || j.status === "Pending") &&
+          hasStatus(j.status, ["Applied", "Pending"]) &&
           (daysSince(j.appliedDate) ?? 0) >= 14
       );
     case "followUpDue":
       return jobs.filter(isFollowUpDue);
     case "offers":
-      return jobs.filter((j) =>
-        ["Offer", "Accepted", "Negotiating"].includes(j.status ?? "")
-      );
+      return jobs.filter((j) => hasStatus(j.status, ["Offer", "Accepted", "Negotiating"]));
     default:
       return jobs;
   }
@@ -92,15 +131,11 @@ export function filterJobs(jobs: Job[], filter: JobFilter): Job[] {
 
 export function computeStats(jobs: Job[]) {
   const total = jobs.length;
-  const interviewing = jobs.filter(
-    (j) => j.status && INTERVIEW_STATUSES.includes(j.status)
-  ).length;
-  const offers = jobs.filter((j) =>
-    ["Offer", "Accepted", "Negotiating"].includes(j.status ?? "")
-  ).length;
-  const rejected = jobs.filter((j) => j.status === "Rejected").length;
+  const interviewing = jobs.filter((j) => hasStatus(j.status, INTERVIEW_STATUSES)).length;
+  const offers = jobs.filter((j) => hasStatus(j.status, ["Offer", "Accepted", "Negotiating"])).length;
+  const rejected = jobs.filter((j) => canonicalStatus(j.status) === "Rejected").length;
   const responded = jobs.filter(
-    (j) => j.status && !["Applied", "Pending"].includes(j.status)
+    (j) => j.status && !hasStatus(j.status, ["Applied", "Pending"])
   ).length;
   const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
   const followUpDue = jobs.filter(isFollowUpDue).length;

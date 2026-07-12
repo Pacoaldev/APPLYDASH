@@ -5,7 +5,7 @@ import { fetchStatusHistory } from "@/app/dashboard/actions";
 import { JobStatusHistoryEntry } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { Loader2, X } from "lucide-react";
-import { getStatusStyle } from "@/lib/job-utils";
+import { getStatusStyle, displayStatus } from "@/lib/job-utils";
 
 type Props = {
   jobId: string | null;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export function StatusHistoryPanel({ jobId, company, onClose }: Props) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [history, setHistory] = useState<JobStatusHistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +59,7 @@ export function StatusHistoryPanel({ jobId, company, onClose }: Props) {
                     </span>
                     <span className="text-muted-foreground">→</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
-                      {entry.newStatus ?? "—"}
+                      {displayStatus(entry.newStatus, locale)}
                     </span>
                   </li>
                 );
