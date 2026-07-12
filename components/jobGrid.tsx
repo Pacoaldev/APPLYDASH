@@ -35,10 +35,12 @@ import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
 import { useLocale } from "@/components/locale-provider";
 import { getAgGridLocale } from "@/lib/ag-grid-locale";
-import { getStatusStyle, isFollowUpDue, parseTagsInput } from "@/lib/job-utils";
+import { getStatusStyle, isFollowUpDue, parseTagsInput, formatDateDDMMYY } from "@/lib/job-utils";
 
 const GRID_HEIGHT_KEY = "applydash-grid-height";
+const GRID_WIDTH_KEY = "applydash-grid-width";
 const GRID_MIN_H = 160;
+const GRID_MIN_W = 600;
 
 function uuidv4() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -124,10 +126,11 @@ function FollowUpCellRenderer(params: ICellRendererParams<Job>) {
   const job = params.data;
   if (!job) return null;
   const due = isFollowUpDue(job);
+  const display = formatDateDDMMYY(params.value as string);
   return (
     <span className={`inline-flex items-center gap-1 text-xs ${due ? "text-cyan-600 font-semibold" : ""}`}>
       {due && <Bell className="h-3 w-3" />}
-      {params.value ?? "—"}
+      {display || "—"}
     </span>
   );
 }
@@ -138,6 +141,17 @@ type Props = {
   onJobsChange?: (jobs: Job[]) => void;
   onShowHistory?: (job: Job) => void;
 };
+
+function getInitialGridWidth(): number | "100%" {
+  if (typeof window === "undefined") return "100%";
+  try {
+    const stored = localStorage.getItem(GRID_WIDTH_KEY);
+    if (stored) return Math.max(GRID_MIN_W, Number(stored));
+  } catch {
+    // ponytail: ignore
+  }
+  return "100%";
+}
 
 function getInitialGridHeight(rowCount: number): number {
   if (typeof window === "undefined") return 280;
@@ -174,6 +188,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [rowData, setRowData] = useState<Job[]>(data);
   const [gridHeight, setGridHeight] = useState(() => getInitialGridHeight(data.length));
+  const [gridWidth, setGridWidth] = useState<number | "100%">(() => getInitialGridWidth());
 
   const updateRows = (next: Job[]) => {
     setRowData(next);
@@ -189,6 +204,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     if (!el) return;
     const ro = new ResizeObserver(() => {
       const h = el.offsetHeight;
+      const w = el.offsetWidth;
       if (h >= GRID_MIN_H) {
         setGridHeight(h);
         try {
@@ -196,6 +212,15 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         } catch {
           // ponytail: ignore
         }
+      }
+      if (w >= GRID_MIN_W) {
+        setGridWidth(w);
+        try {
+          localStorage.setItem(GRID_WIDTH_KEY, String(w));
+        } catch {
+          // ponytail: ignore
+        }
+        gridRef.current?.api?.sizeColumnsToFit();
       }
     });
     ro.observe(el);
@@ -226,38 +251,45 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         headerName: c.company,
         field: "company",
         editable: true,
+        minWidth: 130,
+        tooltipField: "company",
       },
       {
         headerName: c.position,
         field: "position",
         editable: true,
+        minWidth: 150,
+        tooltipField: "position",
       },
       {
         headerName: c.type,
         field: "type",
         editable: true,
+        minWidth: 110,
       },
       {
         headerName: c.appliedDate,
         field: "appliedDate",
         editable: true,
+        minWidth: 110,
         cellEditor: "agDateCellEditor",
-        valueFormatter: (p) => p.value || "",
+        valueFormatter: (p) => formatDateDDMMYY(p.value),
         valueParser: (p) => {
           if (!p.newValue) return null;
           const d = new Date(p.newValue);
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: c.platform, field: "platform", editable: true },
+      { headerName: c.platform, field: "platform", editable: true, minWidth: 110 },
       {
         headerName: c.status,
         field: "status",
         editable: true,
+        minWidth: 120,
         cellRenderer: StatusCellRenderer,
       },
-      { headerName: c.location, field: "location", editable: true },
-      { headerName: c.salary, field: "salary", editable: true },
+      { headerName: c.location, field: "location", editable: true, minWidth: 140, tooltipField: "location" },
+      { headerName: c.salary, field: "salary", editable: true, minWidth: 130, tooltipField: "salary" },
       {
         headerName: t.dashboard.tags,
         field: "tags",
@@ -272,20 +304,24 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         headerName: t.dashboard.nextFollowUp,
         field: "nextFollowUpDate",
         editable: true,
+        minWidth: 110,
         cellEditor: "agDateCellEditor",
         cellRenderer: FollowUpCellRenderer,
+        valueFormatter: (p) => formatDateDDMMYY(p.value),
         valueParser: (p) => {
           if (!p.newValue) return null;
           const d = new Date(p.newValue);
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: c.notes, field: "notes", editable: true, flex: 2 },
+      { headerName: c.notes, field: "notes", editable: true, flex: 2, minWidth: 120 },
       {
         headerName: c.link,
         field: "applicationLink",
         editable: true,
+        minWidth: 160,
         cellRenderer: LinkCellRenderer,
+        tooltipField: "applicationLink",
       },
     ];
     },
@@ -298,10 +334,17 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
       filter: true,
       resizable: true,
       flex: 1,
-      minWidth: 100,
+      minWidth: 120,
+      wrapText: true,
+      autoHeight: false,
+      tooltipValueGetter: (p) => (p.value != null ? String(p.value) : undefined),
     }),
     []
   );
+
+  const fitColumns = () => {
+    gridRef.current?.api?.sizeColumnsToFit();
+  };
 
   const handleAddRow = () => {
     if (tempRowId) return;
@@ -554,8 +597,12 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         <div
           ref={gridWrapRef}
           title={t.dashboard.resizeHint}
-          className="ag-theme-quartz min-w-[900px] w-full h-full resize-y overflow-hidden min-h-[160px] max-h-[92dvh] border border-border rounded-lg"
-          style={{ height: gridHeight }}
+          className="ag-theme-quartz resize overflow-hidden min-h-[160px] max-h-[92dvh] border border-border rounded-lg"
+          style={{
+            height: gridHeight,
+            width: gridWidth === "100%" ? "100%" : gridWidth,
+            minWidth: "100%",
+          }}
         >
           <div className="w-full h-full">
           <AgGridReact
@@ -571,8 +618,11 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
             getRowId={(p) => p.data.id}
             onCellValueChanged={onCellValueChanged}
             onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
-            suppressHorizontalScroll={false}
+            onGridReady={fitColumns}
+            onFirstDataRendered={fitColumns}
             domLayout="normal"
+            enableBrowserTooltips
+            tooltipShowDelay={400}
           />
           </div>
         </div>
