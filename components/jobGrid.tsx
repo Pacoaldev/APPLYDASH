@@ -282,9 +282,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
 
   const [tempRowId, setTempRowId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [dirtyRowId, setDirtyRowId] = useState<string | null>(null);
+  const [dirtyRows, setDirtyRows] = useState<Map<string, Job>>(new Map()); // id → original snapshot
   const [isUpdating, setIsUpdating] = useState(false);
-  const originalRowData = useRef<Job | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -502,48 +501,59 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
 
   const onCellValueChanged = (event: CellValueChangedEvent<Job>) => {
     if (event.data.id.toString().startsWith("temp_")) return;
-    if (!dirtyRowId) {
-      originalRowData.current = { ...event.data };
-      setDirtyRowId(event.data.id);
-    } else if (dirtyRowId !== event.data.id) {
-      originalRowData.current = { ...event.data };
-      setDirtyRowId(event.data.id);
-    }
+    setDirtyRows((prev) => {
+      const next = new Map(prev);
+      // Only save the original snapshot the first time this row becomes dirty
+      if (!next.has(event.data.id)) {
+        next.set(event.data.id, { ...event.oldValue, ...event.data, [event.column.getColId()]: event.oldValue });
+      }
+      return next;
+    });
   };
 
   const handleUpdateRow = async () => {
-    if (!dirtyRowId) return;
+    if (dirtyRows.size === 0) return;
     setIsUpdating(true);
     const api = gridRef.current?.api;
-    const rowNode = api?.getRowNode(dirtyRowId);
-    if (!rowNode?.data) {
-      toast.error(t.dashboard.toast.rowNotFound);
-      setIsUpdating(false);
-      return;
-    }
-    try {
-      const result = await updateJob(rowNode.data);
-      if (result.error) {
-        toast.error(t.dashboard.toast.updateError, { description: result.error });
-      } else if (result.success && result.data) {
-        toast.success(t.dashboard.toast.updateSuccess);
-        updateRows(rowData.map((j) => (j.id === rowNode.data!.id ? (result.data as Job) : j)));
-        setDirtyRowId(null);
-        originalRowData.current = null;
+    api?.stopEditing();
+
+    const ids = Array.from(dirtyRows.keys());
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const id of ids) {
+      const rowNode = api?.getRowNode(id);
+      if (!rowNode?.data) continue;
+      try {
+        const result = await updateJob(rowNode.data);
+        if (result.error) {
+          errorCount++;
+          toast.error(t.dashboard.toast.updateError, { description: result.error });
+        } else if (result.success && result.data) {
+          successCount++;
+          updateRows(rowData.map((j) => (j.id === id ? (result.data as Job) : j)));
+        }
+      } catch {
+        errorCount++;
+        toast.error(t.dashboard.toast.unexpectedError);
       }
-    } catch {
-      toast.error(t.dashboard.toast.unexpectedError);
-    } finally {
-      setIsUpdating(false);
     }
+
+    if (successCount > 0) {
+      toast.success(successCount === 1 ? t.dashboard.toast.updateSuccess : `${successCount} ofertas actualizadas`);
+    }
+    setDirtyRows(new Map());
+    setIsUpdating(false);
   };
 
   const handleCancelUpdate = () => {
-    if (!dirtyRowId || !originalRowData.current) return;
+    if (dirtyRows.size === 0) return;
     const api = gridRef.current?.api;
-    api?.applyTransaction({ update: [{ ...originalRowData.current }] });
-    setDirtyRowId(null);
-    originalRowData.current = null;
+    // Restore all dirty rows to their original values
+    const restores: Job[] = [];
+    dirtyRows.forEach((original) => restores.push(original));
+    api?.applyTransaction({ update: restores });
+    setDirtyRows(new Map());
   };
 
   const handleDeleteRow = async () => {
@@ -682,11 +692,11 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
             </GlowingButton>
           </>
         )}
-        {dirtyRowId && (
+        {dirtyRows.size > 0 && (
           <>
             <GlowingButton onClick={handleUpdateRow} disabled={isUpdating} className="w-fit" variant="outline">
               {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4 text-green-600" />}
-              {t.dashboard.update}
+              {t.dashboard.update}{dirtyRows.size > 1 ? ` (${dirtyRows.size})` : ""}
             </GlowingButton>
             <GlowingButton onClick={handleCancelUpdate} disabled={isUpdating} className="w-fit" variant="ghost">
               <X className="mr-2 h-4 w-4 text-red-600" /> {t.dashboard.cancelUpdate}
