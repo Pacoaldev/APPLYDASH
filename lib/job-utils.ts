@@ -1,6 +1,33 @@
 import { Job, JobFilter } from "@/types/job";
 import type { Locale } from "@/lib/i18n/translations";
 
+// ─── Type translation maps ────────────────────────────────────────────────────
+
+export const TYPE_ES_TO_EN: Record<string, string> = {
+  Remoto: "Remote",
+  Presencial: "Office",
+  Híbrido: "Hybrid",
+};
+
+const TYPE_EN_TO_ES: Record<string, string> = {
+  Remote: "Remoto",
+  Office: "Presencial",
+  Hybrid: "Híbrido",
+};
+
+export function canonicalType(type: string | null | undefined): string {
+  if (!type) return "";
+  return TYPE_ES_TO_EN[type] ?? type;
+}
+
+export function displayType(type: string | null | undefined, locale: Locale = "en"): string {
+  if (!type) return "";
+  const canonical = TYPE_ES_TO_EN[type] ?? type;
+  return locale === "es" ? (TYPE_EN_TO_ES[canonical] ?? canonical) : canonical;
+}
+
+// ─── Status translation maps ──────────────────────────────────────────────────
+
 export const STATUS_ES_TO_EN: Record<string, string> = {
   Aplicado: "Applied",
   Entrevista: "Interview",

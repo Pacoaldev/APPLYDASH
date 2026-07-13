@@ -35,7 +35,7 @@ import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
 import { useLocale } from "@/components/locale-provider";
 import { getAgGridLocale } from "@/lib/ag-grid-locale";
-import { getStatusStyle, isFollowUpDue, parseTagsInput, formatDateDDMMYY, displayStatus, canonicalStatus } from "@/lib/job-utils";
+import { getStatusStyle, isFollowUpDue, parseTagsInput, formatDateDDMMYY, displayStatus, canonicalStatus, displayType, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
 const GRID_HEIGHT_KEY = "applydash-grid-height";
@@ -323,6 +323,18 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         minWidth: 110,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: typeOptions },
+        valueGetter: (p) => displayType(p.data?.type ?? null, locale),
+        valueSetter: (p) => {
+          if (!p.data) return false;
+          const canonical = canonicalType(String(p.newValue ?? "")) || String(p.newValue ?? "");
+          if (!canonical) return false;
+          p.data.type = canonical;
+          // Auto-fill location when type is Remote
+          if (canonical === "Remote" && (!p.data.location || p.data.location === "undisclosed")) {
+            p.data.location = locale === "es" ? "Remoto" : "Remote";
+          }
+          return true;
+        },
       },
       {
         headerName: c.appliedDate,
@@ -559,7 +571,16 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   };
 
   const handleExportCSV = () => {
-    gridRef.current?.api?.exportDataAsCsv({ fileName: "jobs.csv" });
+    // Add UTF-8 BOM so Excel/LibreOffice opens the file with correct encoding
+    const csvContent = gridRef.current?.api?.getDataAsCsv({ suppressQuotes: false }) ?? "";
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "jobs.csv";
+    a.click();
+    URL.revokeObjectURL(url);
     toast.success(t.dashboard.toast.exportSuccess);
   };
 
@@ -568,7 +589,29 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     if (!file) return;
     setIsImporting(true);
     try {
-      const text = await file.text();
+      // Read as ArrayBuffer first to handle encoding detection
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      // Detect UTF-8 BOM (EF BB BF) or Windows-1252 by checking for high bytes
+      let text: string;
+      const hasBom = bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
+      const hasHighBytes = bytes.some(b => b > 0x7F);
+
+      if (hasBom) {
+        // UTF-8 with BOM — decode skipping the BOM
+        text = new TextDecoder("utf-8").decode(bytes.slice(3));
+      } else if (hasHighBytes) {
+        // Try UTF-8 first; if it produces replacement characters (U+FFFD) fall back to Windows-1252
+        const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+        const win1252 = new TextDecoder("windows-1252", { fatal: false }).decode(bytes);
+        // Heuristic: UTF-8 decoding of Windows-1252 often produces "Ã©" patterns
+        text = utf8.includes("\uFFFD") || /Ã[€-ÿ]/.test(utf8) ? win1252 : utf8;
+      } else {
+        // Pure ASCII — no encoding issues
+        text = new TextDecoder("utf-8").decode(bytes);
+      }
+
       const rows = parseCsv(text);
       // Normalize DD/MM/YYYY → YYYY-MM-DD
       const normalizeDate = (v: string | null) => {
