@@ -36,6 +36,7 @@ model Job {
   notes            String?   @default(" ")
   nextFollowUpDate DateTime? @db.Date @map("nextfollowupdate")
   tags             String[]  @default([])
+  createdAt        DateTime  @default(now()) @map("created_at")
 
   user          User                @relation(fields: [userid], references: [id])
   statusHistory JobStatusHistory[]

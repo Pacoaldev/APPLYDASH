@@ -26,7 +26,7 @@ export async function getJobsForUser(userId: string): Promise<Job[]> {
   try {
     const jobs = await prisma.job.findMany({
       where: { userid: userId },
-      orderBy: { appliedDate: "desc" },
+      orderBy: { createdAt: "asc" },
       include: {
         statusHistory: { orderBy: { changedAt: "desc" }, take: 20 },
       },
