@@ -18,7 +18,7 @@ export function Footer({ className = '' }: FooterProps) {
         <div className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-2">
             <img
-              src="/applydashlogo.svg"
+              src="/applydashlogo.webp"
               alt="ApplyDash Logo"
               width={32}
               height={32}
@@ -36,7 +36,7 @@ export function Footer({ className = '' }: FooterProps) {
                 href={developerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 font-semibold hover:text-blue-400 transition-colors hover:underline"
+                className="text-blue-600 dark:text-blue-400 font-semibold underline hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
               >
                 Pacoaldev
               </a>
@@ -47,7 +47,7 @@ export function Footer({ className = '' }: FooterProps) {
                 href={developerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-400 transition-colors hover:underline"
+                className="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
               >
                 pacoal.dev
               </a>

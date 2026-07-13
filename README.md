@@ -310,6 +310,19 @@ MIT License — see [LICENSE](LICENSE).
 
 ## 📝 Changelog
 
+### July 2025 — Performance & quality improvements (Lighthouse)
+
+- **Logo optimized** — SVG (1127 KiB) converted to WebP (15 KiB) for navbar and footer; 98% size reduction
+- **LCP improved** — removed animation delay on the landing page subtitle so the browser paints it immediately
+- **CLS fixed** — `main` element now has a stable `min-height` to prevent layout shift on hydration
+- **Font display** — added `display: "swap"` to Geist Sans and Geist Mono to prevent invisible text during load
+- **Security headers** — added `Content-Security-Policy` and `Cross-Origin-Opener-Policy` headers in `next.config.ts`
+- **Accessibility** — footer links now always show underline (not only on hover) to meet WCAG contrast requirements
+- **Status badges** — redesigned with raised button effect and progressive color scale (blue → amber → orange → green → red)
+- **Row order preserved** — editing or saving a job no longer reorders the table
+- **Footer i18n** — footer now respects the active locale (EN/ES)
+- **Extension status fix** — resolved duplicate `id="status"` bug that prevented the status field from being sent correctly
+
 ### July 2025 — Vercel migration
 
 - **Migrated from DigitalOcean (Docker) to Vercel** — removed `output: standalone` and custom build scripts; Vercel now auto-detects Next.js
