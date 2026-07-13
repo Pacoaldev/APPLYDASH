@@ -172,23 +172,47 @@ function getInitialGridHeight(rowCount: number): number {
   return Math.min(480, Math.max(200, 100 + rowCount * 42 + 56));
 }
 
+function parseCsvLine(line: string, sep: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (!inQuotes && line.slice(i, i + sep.length) === sep) {
+      result.push(current.trim());
+      current = "";
+      i += sep.length - 1;
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
 
   // Auto-detect separator: semicolon or comma
-  const firstLine = lines[0];
-  const separator = firstLine.includes(";") ? ";" : ",";
-  const sepRegex = separator === ";"
-    ? /("([^"]|"")*"|[^;]*)/g
-    : /("([^"]|"")*"|[^,]*)/g;
+  const sep = lines[0].includes(";") ? ";" : ",";
 
-  const headers = firstLine.split(separator).map((h) => h.trim().replace(/^"|"$/g, ""));
+  const rawHeaders = parseCsvLine(lines[0], sep);
+  // Drop leading index column (#, "", "1", etc.) if present
+  const firstHeader = rawHeaders[0].replace(/^"|"$/g, "").trim();
+  const skipFirst = firstHeader === "#" || firstHeader === "" || /^\d+$/.test(firstHeader);
+  const headers = (skipFirst ? rawHeaders.slice(1) : rawHeaders)
+    .map((h) => h.replace(/^"|"$/g, "").trim());
+
   return lines.slice(1).map((line) => {
-    const values = line.match(sepRegex) ?? [];
+    const rawValues = parseCsvLine(line, sep);
+    const values = skipFirst ? rawValues.slice(1) : rawValues;
     const row: Record<string, string> = {};
     headers.forEach((h, i) => {
-      row[h] = (values[i] ?? "").trim().replace(/^"|"$/g, "").replace(/""/g, '"');
+      row[h] = (values[i] ?? "").replace(/^"|"$/g, "").trim();
     });
     return row;
   });
@@ -546,18 +570,26 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     try {
       const text = await file.text();
       const rows = parseCsv(text);
+      // Normalize DD/MM/YYYY → YYYY-MM-DD
+      const normalizeDate = (v: string | null) => {
+        if (!v) return null;
+        const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+        return v;
+      };
+
       const mapped = rows.map((r) => ({
         company:         r.company || r.Company || r["Empresa"] || null,
         position:        r.position || r.Position || r["Puesto"] || null,
         type:            r.type || r.Type || r["Tipo"] || "Remote",
         applicationLink: r.applicationLink || r.Link || r.link || r["Enlace"] || null,
         status:          r.status || r.Status || r["Estado"] || "Applied",
-        appliedDate:     r.appliedDate || r["Applied Date"] || r["Fecha aplicación"] || r["Fecha aplicacion"] || null,
+        appliedDate:     normalizeDate(r.appliedDate || r["Applied Date"] || r["Fecha aplicación"] || r["Fecha aplicacion"] || null),
         location:        r.location || r.Location || r["Ubicación"] || r["Ubicacion"] || null,
         platform:        r.platform || r.Platform || r["Plataforma"] || null,
         salary:          r.salary || r.Salary || r["Salario"] || null,
         notes:           r.notes || r.Notes || r["Notas"] || null,
-        nextFollowUpDate:r.nextFollowUpDate || r["Next follow-up"] || r["Próximo seguimiento"] || r["Proximo seguimiento"] || null,
+        nextFollowUpDate:normalizeDate(r.nextFollowUpDate || r["Next follow-up"] || r["Próximo seguimiento"] || r["Proximo seguimiento"] || null),
         tags:            r.tags || r.Tags || r["Etiquetas"] || "",
       }));
       if (mapped.length === 0) {
