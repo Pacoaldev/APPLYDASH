@@ -30,12 +30,21 @@ export function JobDashboard({ data }: Props) {
     const updatedMap = new Map(updated.map((j) => [j.id, j]));
     const filteredIds = new Set(filteredJobs.map((j) => j.id));
     setJobs((prev) => {
+      // Replace in-place and keep original order — never reorder
       const next = prev
         .filter((j) => !filteredIds.has(j.id) || updatedMap.has(j.id))
         .map((j) => updatedMap.get(j.id) ?? j);
+      // Append genuinely new jobs (adds) at the end
       for (const j of updated) {
         if (!next.some((n) => n.id === j.id)) next.push(j);
       }
+      // Preserve original insertion order by sorting against prev index
+      const prevOrder = new Map(prev.map((j, i) => [j.id, i]));
+      next.sort((a, b) => {
+        const ai = prevOrder.get(a.id) ?? Infinity;
+        const bi = prevOrder.get(b.id) ?? Infinity;
+        return ai - bi;
+      });
       return next;
     });
   };
