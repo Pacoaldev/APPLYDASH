@@ -11,11 +11,13 @@ import { Toaster } from "sonner";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -43,7 +45,7 @@ export default function RootLayout({
           <LocaleProvider>
             <ErrorBoundary>
               <ClientNavbarWrapper />
-              <main className="flex-grow">{children}</main>
+              <main className="flex-grow min-h-[calc(100vh-4rem)]">{children}</main>
               <Footer />
             </ErrorBoundary>
             <Toaster richColors position="top-right" closeButton />

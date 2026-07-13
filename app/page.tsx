@@ -33,7 +33,7 @@ export default function Home() {
       <div className="relative">
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-10 text-center">
           <div
-            className={`transform transition-all duration-1000 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+            className={`transform transition-all duration-700 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">
               {t.landing.title}{" "}
@@ -41,11 +41,12 @@ export default function Home() {
                 {t.landing.titleHighlight}
               </span>
             </h1>
+            {/* LCP element — no animation delay so it renders immediately */}
             <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               {t.landing.subtitle}
             </p>
             <div
-              className={`transform transition-all duration-1000 delay-300 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+              className={`transform transition-all duration-700 delay-200 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}
             >
               <button
                 className="group bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 shadow-2xl flex items-center space-x-3 mx-auto"

@@ -53,7 +53,7 @@ export function NavbarDemo() {
         {/* Logo and Title */}
         <div className="flex items-center gap-2">
           <span>
-            <img src="/applydashlogo.svg" alt="App Logo" width={60} height={60} className="rounded-xl" />
+            <img src="/applydashlogo.webp" alt="App Logo" width={60} height={60} className="rounded-xl" />
           </span>
           <span className="font-bold text-xl text-blue-700 dark:text-blue-400 tracking-wide">APPLYDASH</span>
         </div>
