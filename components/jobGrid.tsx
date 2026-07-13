@@ -676,7 +676,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2 md:gap-3">
-        {!tempRowId && !dirtyRowId && (
+        {!tempRowId && dirtyRows.size === 0 && (
           <GlowingButton onClick={handleAddRow} className="w-fit" variant="outline">
             <PlusCircle className="mr-2 h-4 w-4" /> {t.dashboard.addJob}
           </GlowingButton>
