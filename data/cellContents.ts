@@ -68,7 +68,7 @@ const cellContents = {
     "Entrevista final",
   ],
   type: ["Remote", "Office", "Hybrid"],
-  typeEs: ["Presencial", "Remoto", "Híbrido"],
+  typeEs: ["Remoto", "Presencial", "Híbrido"],
   level: [
     "Junior",
     "Mid-Level",
