@@ -605,8 +605,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         // Try UTF-8 first; if it produces replacement characters (U+FFFD) fall back to Windows-1252
         const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
         const win1252 = new TextDecoder("windows-1252", { fatal: false }).decode(bytes);
-        // Heuristic: UTF-8 decoding of Windows-1252 often produces "Ã©" patterns
-        text = utf8.includes("\uFFFD") || /Ã[€-ÿ]/.test(utf8) ? win1252 : utf8;
+        // Heuristic: UTF-8 decoding of Windows-1252 often produces "Ã" followed by latin chars
+        text = utf8.includes("\uFFFD") || utf8.includes("Ã©") || utf8.includes("Ã±") || utf8.includes("Ã") ? win1252 : utf8;
       } else {
         // Pure ASCII — no encoding issues
         text = new TextDecoder("utf-8").decode(bytes);
