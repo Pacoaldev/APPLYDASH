@@ -195,8 +195,21 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const gridWrapRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [rowData, setRowData] = useState<Job[]>(data);
-  const [gridHeight, setGridHeight] = useState(() => getInitialGridHeight(data.length));
-  const [gridWidth, setGridWidth] = useState<number | "100%">(() => getInitialGridWidth());
+  const [gridHeight, setGridHeight] = useState(GRID_MIN_H);
+  const [gridWidth, setGridWidth] = useState<number | "100%">("100%");
+
+  // Read persisted size from localStorage after mount (avoids SSR mismatch)
+  useEffect(() => {
+    try {
+      const storedH = localStorage.getItem(GRID_HEIGHT_KEY);
+      setGridHeight(storedH ? Math.max(GRID_MIN_H, Number(storedH)) : Math.min(480, Math.max(200, 100 + data.length * 42 + 56)));
+      const storedW = localStorage.getItem(GRID_WIDTH_KEY);
+      setGridWidth(storedW ? Math.max(GRID_MIN_W, Number(storedW)) : "100%");
+    } catch {
+      // storage blocked — use defaults
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateRows = (next: Job[]) => {
     setRowData(next);
