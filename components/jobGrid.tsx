@@ -427,10 +427,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         toast.error(t.dashboard.toast.saveError, { description: result.error });
       } else if (result.success && result.data) {
         toast.success(t.dashboard.toast.saveSuccess);
-        updateRows([
-          ...rowData.filter((j) => j.id !== rowNode.data!.id),
-          result.data as Job,
-        ]);
+        updateRows(rowData.map((j) => (j.id === rowNode.data!.id ? (result.data as Job) : j)));
         setTempRowId(null);
       }
     } catch {
