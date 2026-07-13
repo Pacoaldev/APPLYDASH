@@ -109,6 +109,12 @@ export const translations = {
       error: "Error",
       tryAgain: "Try Again",
     },
+    footer: {
+      tagline: "Track your job applications with style and precision",
+      rights: "All rights reserved",
+      developedBy: "Developed by",
+      visitPortfolio: "Visit my portfolio at",
+    },
   },
   es: {
     nav: {
@@ -217,6 +223,12 @@ export const translations = {
       loading: "Cargando...",
       error: "Error",
       tryAgain: "Reintentar",
+    },
+    footer: {
+      tagline: "Controla tus candidaturas con estilo y precisión",
+      rights: "Todos los derechos reservados",
+      developedBy: "Desarrollado por",
+      visitPortfolio: "Visita mi portfolio en",
     },
   },
 } as const;
