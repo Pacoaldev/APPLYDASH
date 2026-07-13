@@ -175,9 +175,17 @@ function getInitialGridHeight(rowCount: number): number {
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+
+  // Auto-detect separator: semicolon or comma
+  const firstLine = lines[0];
+  const separator = firstLine.includes(";") ? ";" : ",";
+  const sepRegex = separator === ";"
+    ? /("([^"]|"")*"|[^;]*)/g
+    : /("([^"]|"")*"|[^,]*)/g;
+
+  const headers = firstLine.split(separator).map((h) => h.trim().replace(/^"|"$/g, ""));
   return lines.slice(1).map((line) => {
-    const values = line.match(/("([^"]|"")*"|[^,]*)/g) ?? [];
+    const values = line.match(sepRegex) ?? [];
     const row: Record<string, string> = {};
     headers.forEach((h, i) => {
       row[h] = (values[i] ?? "").trim().replace(/^"|"$/g, "").replace(/""/g, '"');
@@ -539,18 +547,18 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
       const text = await file.text();
       const rows = parseCsv(text);
       const mapped = rows.map((r) => ({
-        company: r.company || r.Company || null,
-        position: r.position || r.Position || null,
-        type: r.type || r.Type || "Remote",
-        applicationLink: r.applicationLink || r.Link || r.link || null,
-        status: r.status || r.Status || "Applied",
-        appliedDate: r.appliedDate || r["Applied Date"] || null,
-        location: r.location || r.Location || null,
-        platform: r.platform || r.Platform || null,
-        salary: r.salary || r.Salary || null,
-        notes: r.notes || r.Notes || null,
-        nextFollowUpDate: r.nextFollowUpDate || r["Next follow-up"] || null,
-        tags: r.tags || r.Tags || "",
+        company:         r.company || r.Company || r["Empresa"] || null,
+        position:        r.position || r.Position || r["Puesto"] || null,
+        type:            r.type || r.Type || r["Tipo"] || "Remote",
+        applicationLink: r.applicationLink || r.Link || r.link || r["Enlace"] || null,
+        status:          r.status || r.Status || r["Estado"] || "Applied",
+        appliedDate:     r.appliedDate || r["Applied Date"] || r["Fecha aplicación"] || r["Fecha aplicacion"] || null,
+        location:        r.location || r.Location || r["Ubicación"] || r["Ubicacion"] || null,
+        platform:        r.platform || r.Platform || r["Plataforma"] || null,
+        salary:          r.salary || r.Salary || r["Salario"] || null,
+        notes:           r.notes || r.Notes || r["Notas"] || null,
+        nextFollowUpDate:r.nextFollowUpDate || r["Next follow-up"] || r["Próximo seguimiento"] || r["Proximo seguimiento"] || null,
+        tags:            r.tags || r.Tags || r["Etiquetas"] || "",
       }));
       if (mapped.length === 0) {
         toast.error(t.dashboard.importError, {
