@@ -23,10 +23,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 document.getElementById("save").addEventListener("click", async () => {
-  const statusEl = document.getElementById("status");
+  const statusMsg = document.getElementById("statusMsg");
   const btn = document.getElementById("save");
   btn.disabled = true;
-  statusEl.textContent = "Saving...";
+  statusMsg.textContent = "Saving...";
+  statusMsg.style.color = "";
 
   const baseUrl = document.getElementById("baseUrl").value.replace(/\/$/, "");
   await chrome.storage.local.set({ baseUrl });
@@ -35,7 +36,7 @@ document.getElementById("save").addEventListener("click", async () => {
     company: document.getElementById("company").value || null,
     position: document.getElementById("position").value || null,
     platform: document.getElementById("platform").value || null,
-    status: document.getElementById("status").value,
+    status: document.getElementById("jobStatus").value,
     applicationLink: (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.url ?? null,
     appliedDate: new Date().toISOString().split("T")[0],
   };
@@ -49,11 +50,11 @@ document.getElementById("save").addEventListener("click", async () => {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || "Failed");
-    statusEl.textContent = "Saved!";
-    statusEl.style.color = "green";
+    statusMsg.textContent = "Saved!";
+    statusMsg.style.color = "green";
   } catch (e) {
-    statusEl.textContent = e.message || "Error — log in to ApplyDash first";
-    statusEl.style.color = "red";
+    statusMsg.textContent = e.message || "Error — log in to ApplyDash first";
+    statusMsg.style.color = "red";
   } finally {
     btn.disabled = false;
   }

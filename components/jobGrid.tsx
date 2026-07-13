@@ -102,7 +102,12 @@ function StatusCellRenderer(params: ICellRendererParams<Job>) {
   const style = getStatusStyle(params.data?.status ?? null);
   const label = displayStatus(params.data?.status ?? null, locale);
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+    <span
+      className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide
+        ${style.bg} ${style.text} ${style.shadow}
+        translate-y-0 active:translate-y-[1px] active:shadow-none
+        transition-all duration-75 select-none`}
+    >
       {label}
     </span>
   );
