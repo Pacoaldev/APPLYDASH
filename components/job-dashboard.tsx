@@ -54,30 +54,31 @@ export function JobDashboard({ data }: Props) {
       <DashboardStats jobs={jobs} />
 
       <div className="flex flex-col gap-2 mb-3">
-        {/* Filters row */}
-        <QuickFilters active={filter} onChange={setFilter} className="mb-0" />
-        {/* View toggle — right-aligned, on its own row on mobile */}
-        <div className="flex items-center gap-2 justify-end">
-          <button
-            type="button"
-            onClick={() => setView("table")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-              view === "table" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
-            }`}
-          >
-            <Table2 className="h-4 w-4" />
-            {t.dashboard.viewTable}
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("kanban")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-              view === "kanban" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
-            }`}
-          >
-            <LayoutGrid className="h-4 w-4" />
-            {t.dashboard.viewKanban}
-          </button>
+        {/* Filters + view toggle on the same row */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <QuickFilters active={filter} onChange={setFilter} className="mb-0" />
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setView("table")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                view === "table" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <Table2 className="h-4 w-4" />
+              {t.dashboard.viewTable}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("kanban")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                view === "kanban" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              {t.dashboard.viewKanban}
+            </button>
+          </div>
         </div>
       </div>
 
