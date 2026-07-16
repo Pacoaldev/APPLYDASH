@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Job, JobFilter, DashboardView } from "@/types/job";
-import { filterJobs } from "@/lib/job-utils";
+import { filterJobs, canonicalStatus } from "@/lib/job-utils";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { QuickFilters } from "@/components/quick-filters";
 import { StatusHistoryPanel } from "@/components/status-history-panel";
@@ -17,6 +17,7 @@ export function JobDashboard({ data }: Props) {
   const { t } = useLocale();
   const [jobs, setJobs] = useState<Job[]>(data);
   const [filter, setFilter] = useState<JobFilter>("all");
+  const [hideRejected, setHideRejected] = useState(false);
   const [view, setView] = useState<DashboardView>("table");
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
 
@@ -24,7 +25,12 @@ export function JobDashboard({ data }: Props) {
     setJobs(data);
   }, [data]);
 
-  const filteredJobs = useMemo(() => filterJobs(jobs, filter), [jobs, filter]);
+  const filteredJobs = useMemo(() => {
+    const byFilter = filterJobs(jobs, filter);
+    return hideRejected
+      ? byFilter.filter((j) => canonicalStatus(j.status) !== "Rejected")
+      : byFilter;
+  }, [jobs, filter, hideRejected]);
 
   const handleJobsChange = (updated: Job[]) => {
     const updatedMap = new Map(updated.map((j) => [j.id, j]));
@@ -56,7 +62,22 @@ export function JobDashboard({ data }: Props) {
       <div className="flex flex-col gap-2 mb-3">
         {/* Filters + view toggle on the same row */}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <QuickFilters active={filter} onChange={setFilter} className="mb-0" />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <QuickFilters active={filter} onChange={setFilter} className="mb-0" />
+            <button
+              type="button"
+              onClick={() => setHideRejected((v) => !v)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                hideRejected
+                  ? "bg-red-600 text-white shadow"
+                  : "bg-muted text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              {hideRejected
+                ? t.dashboard.filters.showRejected
+                : t.dashboard.filters.hideRejected}
+            </button>
+          </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
