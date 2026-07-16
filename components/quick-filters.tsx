@@ -7,6 +7,7 @@ type Props = {
   active: JobFilter;
   onChange: (filter: JobFilter) => void;
   className?: string;
+  extra?: React.ReactNode;
 };
 
 const FILTERS: JobFilter[] = [
@@ -18,7 +19,7 @@ const FILTERS: JobFilter[] = [
   "offers",
 ];
 
-export function QuickFilters({ active, onChange, className = "" }: Props) {
+export function QuickFilters({ active, onChange, className = "", extra }: Props) {
   const { t } = useLocale();
 
   const labels: Record<JobFilter, string> = {
@@ -31,7 +32,7 @@ export function QuickFilters({ active, onChange, className = "" }: Props) {
   };
 
   return (
-    <div className={`flex flex-wrap gap-1.5 mb-4 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-1.5 mb-4 ${className}`}>
       {FILTERS.map((filter) => (
         <button
           key={filter}
@@ -46,6 +47,7 @@ export function QuickFilters({ active, onChange, className = "" }: Props) {
           {labels[filter]}
         </button>
       ))}
+      {extra}
     </div>
   );
 }

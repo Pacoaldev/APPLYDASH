@@ -59,25 +59,27 @@ export function JobDashboard({ data }: Props) {
     <div className="flex flex-col flex-1 min-h-0 w-full">
       <DashboardStats jobs={jobs} />
 
-      <div className="flex flex-col gap-2 mb-3">
-        {/* Filters + view toggle on the same row */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <QuickFilters active={filter} onChange={setFilter} className="mb-0" />
-            <button
-              type="button"
-              onClick={() => setHideRejected((v) => !v)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
-                hideRejected
-                  ? "bg-red-600 text-white shadow"
-                  : "bg-muted text-muted-foreground hover:bg-accent"
-              }`}
-            >
-              {hideRejected
-                ? t.dashboard.filters.showRejected
-                : t.dashboard.filters.hideRejected}
-            </button>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <QuickFilters
+            active={filter}
+            onChange={setFilter}
+            className="mb-0"
+            extra={
+              <button
+                type="button"
+                onClick={() => setHideRejected((v) => !v)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                  hideRejected
+                    ? "bg-red-600 text-white shadow"
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                }`}
+              >
+                {hideRejected
+                  ? t.dashboard.filters.showRejected
+                  : t.dashboard.filters.hideRejected}
+              </button>
+            }
+          />
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
@@ -100,7 +102,6 @@ export function JobDashboard({ data }: Props) {
               {t.dashboard.viewKanban}
             </button>
           </div>
-        </div>
       </div>
 
       <div className="flex-1 min-h-0">
