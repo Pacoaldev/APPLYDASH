@@ -59,6 +59,8 @@ export const translations = {
         noResponse14: "No response 14+ days",
         followUpDue: "Follow-up due",
         offers: "Offers",
+        hideRejected: "Hide rejected",
+        showRejected: "Show rejected",
       },
       stats: {
         total: "Total applications",
@@ -174,6 +176,8 @@ export const translations = {
         noResponse14: "Sin respuesta +14 días",
         followUpDue: "Seguimiento pendiente",
         offers: "Ofertas",
+        hideRejected: "Ocultar rechazadas",
+        showRejected: "Mostrar rechazadas",
       },
       stats: {
         total: "Total candidaturas",
