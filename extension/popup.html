@@ -3,33 +3,77 @@
 <head>
   <meta charset="utf-8" />
   <style>
-    body { font-family: system-ui, sans-serif; width: 320px; padding: 16px; margin: 0; }
-    h1 { font-size: 16px; margin: 0 0 12px; color: #1e40af; }
-    label { display: block; font-size: 12px; margin-bottom: 4px; color: #555; }
-    input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background: linear-gradient(to right, #3b82f6, #4f46e5); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    #status { font-size: 12px; margin-top: 8px; text-align: center; }
-    .hint { font-size: 11px; color: #888; margin-bottom: 12px; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; width: 340px; padding: 14px; margin: 0; background: #0f172a; color: #e2e8f0; }
+    h1 { font-size: 15px; margin: 0 0 10px; color: #60a5fa; display: flex; align-items: center; gap: 8px; }
+    label { display: block; font-size: 11px; margin-bottom: 3px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+    input, select {
+      width: 100%; padding: 6px 8px; margin-bottom: 8px;
+      border: 1px solid #334155; border-radius: 6px;
+      background: #1e293b; color: #e2e8f0; font-size: 13px;
+    }
+    input:focus, select:focus { outline: none; border-color: #3b82f6; }
+    .row { display: flex; gap: 8px; }
+    .row > div { flex: 1; }
+    .hint { font-size: 10px; color: #64748b; margin-bottom: 10px; }
+    .url-row { display: flex; gap-y: 4px; margin-bottom: 8px; }
+    button#save {
+      width: 100%; padding: 9px; margin-top: 4px;
+      background: linear-gradient(to right, #3b82f6, #4f46e5);
+      color: white; border: none; border-radius: 8px; font-weight: 600;
+      font-size: 14px; cursor: pointer; transition: opacity 0.2s;
+    }
+    button#save:disabled { opacity: 0.5; cursor: not-allowed; }
+    #statusMsg { font-size: 12px; margin-top: 7px; text-align: center; min-height: 16px; }
+    .divider { border: none; border-top: 1px solid #1e293b; margin: 8px 0; }
   </style>
 </head>
 <body>
-  <h1><img src="icons/icon-32.png" alt="" width="24" height="24" style="vertical-align:middle;margin-right:8px" />ApplyDash</h1>
-  <p class="hint">ApplyDash URL (pre-filled with production URL).</p>
+  <h1>
+    <img src="icons/icon-32.png" alt="" width="22" height="22" style="border-radius:4px" />
+    ApplyDash
+  </h1>
+
   <label>ApplyDash URL</label>
-  <input id="baseUrl" type="url" placeholder="https://your-applydash.vercel.app" />
+  <input id="baseUrl" type="url" placeholder="https://applydash.vercel.app" />
+
+  <hr class="divider" />
+
   <label>Company</label>
-  <input id="company" />
+  <input id="company" placeholder="Company name" />
+
   <label>Position</label>
-  <input id="position" />
+  <input id="position" placeholder="Job title" />
+
+  <div class="row">
+    <div>
+      <label>Type</label>
+      <select id="jobType">
+        <option value="">— auto —</option>
+        <option value="Remote">Remote</option>
+        <option value="Office">Office</option>
+        <option value="Hybrid">Hybrid</option>
+      </select>
+    </div>
+    <div>
+      <label>Status</label>
+      <select id="jobStatus">
+        <option value="Applied">Applied</option>
+        <option value="Pending">Pending</option>
+        <option value="Interview">Interview</option>
+      </select>
+    </div>
+  </div>
+
+  <label>Location</label>
+  <input id="location" placeholder="City or Remote" />
+
   <label>Platform</label>
-  <input id="platform" />
-  <label>Status</label>
-  <select id="jobStatus">
-    <option>Applied</option>
-    <option>Pending</option>
-    <option>Interview</option>
-  </select>
+  <input id="platform" placeholder="LinkedIn, Indeed…" />
+
+  <label>Salary</label>
+  <input id="salary" placeholder="35.000€ - 40.000€" />
+
   <button id="save">Save to ApplyDash</button>
   <p id="statusMsg"></p>
   <script src="popup.js"></script>
