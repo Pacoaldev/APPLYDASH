@@ -17,7 +17,10 @@ export function JobDashboard({ data }: Props) {
   const { t } = useLocale();
   const [jobs, setJobs] = useState<Job[]>(data);
   const [filter, setFilter] = useState<JobFilter>("all");
-  const [hideRejected, setHideRejected] = useState(false);
+  const [hideRejected, setHideRejected] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("applydash-hide-rejected") === "true"; } catch { return false; }
+  });
   const [view, setView] = useState<DashboardView>("table");
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
 
@@ -67,7 +70,11 @@ export function JobDashboard({ data }: Props) {
             extra={
               <button
                 type="button"
-                onClick={() => setHideRejected((v) => !v)}
+                onClick={() => setHideRejected((v) => {
+                const next = !v;
+                try { localStorage.setItem("applydash-hide-rejected", String(next)); } catch {}
+                return next;
+              })}
                 className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
                   hideRejected
                     ? "bg-red-600 text-white shadow"
