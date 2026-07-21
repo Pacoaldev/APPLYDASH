@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Job, JobFilter, DashboardView } from "@/types/job";
 import { filterJobs, canonicalStatus } from "@/lib/job-utils";
 import { DashboardStats } from "@/components/dashboard-stats";
+import { ActivityChart } from "@/components/activity-chart";
 import { QuickFilters } from "@/components/quick-filters";
 import { StatusHistoryPanel } from "@/components/status-history-panel";
+import { JobDetailPanel } from "@/components/job-detail-panel";
 import JobGrid from "@/components/jobGrid";
 import { JobKanban } from "@/components/job-kanban";
 import { useLocale } from "@/components/locale-provider";
@@ -23,10 +25,16 @@ export function JobDashboard({ data }: Props) {
   });
   const [view, setView] = useState<DashboardView>("table");
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
+  const [detailJob, setDetailJob] = useState<Job | null>(null);
 
   useEffect(() => {
     setJobs(data);
   }, [data]);
+
+  const rejectedCount = useMemo(() => 
+    jobs.filter((j) => canonicalStatus(j.status) === "Rejected").length,
+    [jobs]
+  );
 
   const filteredJobs = useMemo(() => {
     const byFilter = filterJobs(jobs, filter);
@@ -61,6 +69,7 @@ export function JobDashboard({ data }: Props) {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
       <DashboardStats jobs={jobs} />
+      <ActivityChart jobs={jobs} />
 
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <QuickFilters
@@ -82,7 +91,7 @@ export function JobDashboard({ data }: Props) {
                 }`}
               >
                 {hideRejected
-                  ? t.dashboard.filters.showRejected
+                  ? `${t.dashboard.filters.showRejected}${rejectedCount > 0 ? ` (${rejectedCount})` : ""}`
                   : t.dashboard.filters.hideRejected}
               </button>
             }
@@ -117,6 +126,7 @@ export function JobDashboard({ data }: Props) {
           data={filteredJobs}
           onJobsChange={handleJobsChange}
           onShowHistory={setHistoryJob}
+          onRowDoubleClick={setDetailJob}
         />
         ) : (
         <JobKanban
@@ -131,6 +141,14 @@ export function JobDashboard({ data }: Props) {
         jobId={historyJob?.id ?? null}
         company={historyJob?.company ?? null}
         onClose={() => setHistoryJob(null)}
+      />
+      <JobDetailPanel
+        job={detailJob}
+        onClose={() => setDetailJob(null)}
+        onSave={(updated) => {
+          handleJobsChange(jobs.map((j) => j.id === updated.id ? updated : j));
+          setDetailJob(null);
+        }}
       />
     </div>
   );

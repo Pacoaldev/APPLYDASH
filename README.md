@@ -20,16 +20,22 @@ Track your job applications with style and precision. Organize your pipeline, me
 ### Dashboard
 
 - **Statistics panel** — Total applications, response rate, interviews, offers, rejections, and overdue follow-ups
+- **Weekly activity chart** — Collapsible area chart showing applications per week with peak and average metrics
 - **Quick filters** — All, This week, Interviewing, No response 14+ days, Follow-up due, Offers
+- **Hide rejected toggle** — Button next to filters to hide/show rejected applications; shows count of hidden rows
 - **Table view** — Editable AG Grid with sorting, filtering, and pagination
+- **Multi-row editing** — Edit multiple rows freely and save all changes at once with a single Update button; dirty rows highlighted with a yellow left border
+- **Detail panel** — Double-click any row to open a full slide-in side panel with all fields editable in a comfortable form
 - **Kanban view** — Visual pipeline by status with drag-and-drop and inline status changes
-- **Status colors** — Color-coded badges for every application stage
+- **Status badges** — Color-coded raised-button badges with progressive scale (blue → amber → orange → green → red)
+- **Days column** — Calculated "Days" column showing elapsed days since application; color-coded (yellow > 7d, orange > 14d, red > 21d)
 - **Clickable links** — Open job postings directly from the grid
-- **Company & position suggestions** — Dropdown autocomplete from curated lists
 - **Tags** — Comma-separated labels per job (e.g. `Frontend, Remote EU`)
 - **Follow-up reminders** — `nextFollowUpDate` with visual alerts when due
 - **Status history** — Automatic log of every status change per application
-- **CSV export & import** — Back up or bulk-import your applications
+- **CSV export & import** — Export respects active filters; import auto-detects `;`/`,` separator, Spanish column headers, and UTF-8/Windows-1252 encoding
+- **Delete confirmation** — Two-step confirmation before deleting a row to prevent accidents
+- **Keyboard shortcuts** — `N` new job, `S` save/update, `Escape` cancel
 
 ### App experience
 
@@ -46,7 +52,7 @@ Track your job applications with style and precision. Organize your pipeline, me
 
 ### Browser extension
 
-Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, and other sites directly into your dashboard. See [`extension/README.md`](extension/README.md) for install instructions.
+Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, **Michael Page**, **Tecnoempleo**, **Infoempleo**, **Joppy**, and any other job site directly into your dashboard. The extension uses JSON-LD structured data first (most stable) and falls back to portal-specific DOM selectors.
 
 ### Extension Captures
 <p float="left">
@@ -61,6 +67,7 @@ Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, and other site
 | Framework | Next.js 15 (latest patched), React 19 |
 | Styling | Tailwind CSS v4, shadcn/ui, Radix UI |
 | Data grid | AG Grid Community v34 |
+| Charts | Recharts 2 |
 | ORM | Prisma 6 |
 | Database | PostgreSQL (Supabase) |
 | Auth | Supabase Auth + JWT (admin) |
@@ -257,15 +264,17 @@ APPLYDASH/
 │   │   └── migrate/      # Database bootstrap / schema updates
 │   └── dashboard/        # Main user dashboard (server page + actions)
 ├── components/
-│   ├── job-dashboard.tsx # Stats, filters, view toggle
-│   ├── jobGrid.tsx       # AG Grid table
-│   ├── job-kanban.tsx    # Kanban pipeline
+│   ├── job-dashboard.tsx    # Stats, filters, view toggle, detail panel
+│   ├── jobGrid.tsx          # AG Grid table with multi-row editing
+│   ├── job-kanban.tsx       # Kanban pipeline
+│   ├── activity-chart.tsx   # Weekly activity area chart (Recharts)
+│   ├── job-detail-panel.tsx # Slide-in detail/edit panel
 │   ├── dashboard-stats.tsx
 │   ├── quick-filters.tsx
 │   ├── status-history-panel.tsx
 │   ├── theme-provider.tsx
 │   ├── locale-provider.tsx
-│   └── ui/               # shadcn primitives
+│   └── ui/                  # shadcn primitives
 ├── extension/            # Chrome extension (job capture)
 ├── lib/
 │   ├── jobService.ts     # Job queries
@@ -310,7 +319,55 @@ MIT License — see [LICENSE](LICENSE).
 
 ## 📝 Changelog
 
+### July 2026 — UX/UI improvements
+
+- **Weekly activity chart** — Collapsible area chart (Recharts) showing applications per week with peak and average; lives between stats and filters
+- **Job detail panel** — Double-click any row to open a full slide-in side panel with all fields editable; saves directly to the database
+- **Multi-row editing** — Edit multiple rows before saving; each dirty row gets a yellow left border; single "Update (n)" button saves all at once
+- **Delete confirmation** — Two-step confirm before deleting a row to prevent accidental deletions
+- **Hide rejected toggle** — Button next to filters shows count of hidden rejected rows; state persists across reloads via `localStorage`
+- **Days elapsed column** — New "Días/Days" column showing days since application; color-coded yellow > 7d, orange > 14d, red > 21d
+- **Custom favicon** — `favicon.png` and `apple-touch-icon.png` generated from the ApplyDash logo SVG
+- **Keyboard shortcuts** — `N` = new job, `S` = save/update, `Escape` = cancel/close
+- **Export respects active filter** — CSV export now downloads only the rows currently visible in the grid
+- **Quick notes in extension** — `notes` field added to the browser extension popup
+- **Extension scraper rewritten** — Uses JSON-LD structured data first (most stable), then portal-specific DOM selectors with auto-retry; supports LinkedIn, Indeed, InfoJobs, Michael Page, Tecnoempleo, Infoempleo, Joppy, and generic fallback
+- **Salary normalization** — Extension normalizes salary to `35.000€ - 40.000€` or `$50,000 - $70,000` format including `k` suffix support
+
 ### July 2026 — Data integrity & UX fixes
+
+- **Job ordering** — jobs now sort by `createdAt` (insertion timestamp) so new entries always appear at the bottom with the next sequential number; `createdAt` column added to the `jobs` table via Supabase SQL migration
+- **Grid height persisted** — table height is now restored from `localStorage` on page reload using `useEffect`, avoiding the SSR hydration mismatch that was resetting the size every time
+- **CSV import rewritten** — parser now handles semicolon (`;`) and comma (`,`) separators automatically; strips the leading index column (`#`); maps Spanish column headers (`Empresa`, `Puesto`, `Fecha aplicación`, `Ubicación`, etc.); normalizes `DD/MM/YYYY` dates to `YYYY-MM-DD`
+- **CSV encoding fixed** — import detects UTF-8 BOM, pure UTF-8, and Windows-1252 automatically so `€`, `á`, `é`, `ñ` and other special characters import correctly from files generated by Excel or LibreOffice on Windows
+- **CSV export with BOM** — exported files now include a UTF-8 BOM (`\uFEFF`) so Excel and LibreOffice open them with correct encoding without prompting
+- **Type field i18n** — job type (`Remote`/`Office`/`Hybrid`) is now stored canonically in English and displayed translated, matching the same pattern used for status; fixed mismatched `typeEs` array order
+- **Type → Location auto-fill** — selecting `Remote`/`Remoto` automatically sets the Location field to match if it was empty or undisclosed
+- **`canonicalType` / `displayType`** — new utility functions added to `lib/job-utils.ts` mirroring `canonicalStatus` / `displayStatus`
+
+### July 2026 — Performance & quality improvements (Lighthouse)
+
+- **Logo optimized** — SVG (1127 KiB) converted to WebP (15 KiB) for navbar and footer; 98% size reduction
+- **LCP improved** — removed animation delay on the landing page subtitle so the browser paints it immediately
+- **CLS fixed** — `main` element now has a stable `min-height` to prevent layout shift on hydration
+- **Font display** — added `display: "swap"` to Geist Sans and Geist Mono to prevent invisible text during load
+- **Security headers** — added `Content-Security-Policy` and `Cross-Origin-Opener-Policy` headers in `next.config.ts`
+- **Accessibility** — footer links now always show underline (not only on hover) to meet WCAG contrast requirements
+- **Status badges** — redesigned with raised button effect and progressive color scale (blue → amber → orange → green → red)
+- **Row order preserved** — editing or saving a job no longer reorders the table
+- **Footer i18n** — footer now respects the active locale (EN/ES)
+- **Extension status fix** — resolved duplicate `id="status"` bug that prevented the status field from being sent correctly
+
+### July 2026 — Vercel migration
+
+- **Migrated from DigitalOcean (Docker) to Vercel** — removed `output: standalone` and custom build scripts; Vercel now auto-detects Next.js
+- **Next.js upgraded** to latest patched version (CVE-2025-66478 fix)
+- **Supabase connection pooler** — `DATABASE_URL` now uses the Transaction pooler (port 6543) required for Vercel serverless; `DIRECT_URL` added for Prisma migrations
+- **Email redirect fix** — `signUp` now passes `emailRedirectTo` using `NEXT_PUBLIC_SITE_URL` so confirmation emails link to the live domain instead of localhost
+- **`nextFollowUpDate` auto-calculation** — new jobs get `appliedDate + 7 days` automatically in both the dashboard form and the browser extension API
+- **Extension icons fixed** — regenerated as properly centered square PNGs from the SVG logo using `scripts/generate-icons.mjs`
+- **Extension URL pre-filled** — production URL hardcoded as default so users don't need to type it manually
+- **Mobile layout** — filter tabs and view toggle (Tabla/Kanban) now stack on separate rows; table container uses `touch-action: pan-y` to prevent accidental column drags on touch devices
 
 - **Job ordering** — jobs now sort by `createdAt` (insertion timestamp) so new entries always appear at the bottom with the next sequential number; `createdAt` column added to the `jobs` table via Supabase SQL migration
 - **Grid height persisted** — table height is now restored from `localStorage` on page reload using `useEffect`, avoiding the SSR hydration mismatch that was resetting the size every time

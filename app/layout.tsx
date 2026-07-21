@@ -23,6 +23,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ApplyDash",
   description: "Track your job applications with style and precision",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
