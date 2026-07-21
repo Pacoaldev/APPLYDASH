@@ -316,8 +316,10 @@ body {
 /* Added custom animations and utilities for job grid preview */
 @layer utilities {
   .ag-row-dirty {
-    box-shadow: inset 3px 0 0 #f59e0b !important;
     background-color: rgba(245, 158, 11, 0.06) !important;
+  }
+  .ag-row-dirty .ag-cell:first-child {
+    box-shadow: inset 3px 0 0 #f59e0b !important;
   }
 
   .gradient-primary {
