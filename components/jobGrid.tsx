@@ -148,6 +148,7 @@ type Props = {
   data: Job[];
   onJobsChange?: (jobs: Job[]) => void;
   onShowHistory?: (job: Job) => void;
+  onRowDoubleClick?: (job: Job) => void;
 };
 
 function getInitialGridWidth(): number | "100%" {
@@ -218,7 +219,7 @@ function parseCsv(text: string): Record<string, string>[] {
   });
 }
 
-export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
+export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDoubleClick }: Props) {
   const { resolvedTheme } = useTheme();
   const { t, locale } = useLocale();
   const gridTheme = resolvedTheme === "dark" ? darkGridTheme : lightGridTheme;
@@ -287,6 +288,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const columnDefs = useMemo<ColDef<Job>[]>(
     () => {
@@ -393,6 +395,27 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         },
       },
       { headerName: c.notes, field: "notes", editable: true, flex: 2, minWidth: 120 },
+      {
+        headerName: locale === "es" ? "Días" : "Days",
+        colId: "daysAgo",
+        editable: false,
+        maxWidth: 70,
+        sortable: true,
+        valueGetter: (p) => {
+          if (!p.data?.appliedDate) return null;
+          const diff = Math.floor((Date.now() - new Date(p.data.appliedDate).getTime()) / 86400000);
+          return diff;
+        },
+        valueFormatter: (p) => p.value != null ? `${p.value}d` : "—",
+        cellStyle: (p): Record<string, string> => {
+          const d = p.value as number;
+          if (d == null) return {};
+          if (d > 21) return { color: "#f87171", fontWeight: "600" };
+          if (d > 14) return { color: "#fb923c" };
+          if (d > 7)  return { color: "#facc15" };
+          return {};
+        },
+      },
       {
         headerName: c.link,
         field: "applicationLink",
@@ -558,6 +581,11 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
 
   const handleDeleteRow = async () => {
     if (!selectedRowId) return;
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      return;
+    }
+    setShowDeleteConfirm(false);
     setIsDeleting(true);
     const rowNode = gridRef.current?.api?.getRowNode(selectedRowId);
     if (!rowNode?.data) {
@@ -580,9 +608,38 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
     }
   };
 
+  // ── Keyboard shortcuts ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Ignore when typing in an input/textarea/select
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+      if (e.key === "n" || e.key === "N") { e.preventDefault(); handleAddRow(); }
+      if ((e.key === "s" || e.key === "S") && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        if (tempRowId) handleSaveRow();
+        else if (dirtyRows.size > 0) handleUpdateRow();
+      }
+      if (e.key === "Escape") {
+        if (showDeleteConfirm) { setShowDeleteConfirm(false); return; }
+        if (tempRowId) handleCancelAdd();
+        else if (dirtyRows.size > 0) handleCancelUpdate();
+        else setSelectedRowId(null);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tempRowId, dirtyRows, showDeleteConfirm]);
+
   const handleExportCSV = () => {
-    // Add UTF-8 BOM so Excel/LibreOffice opens the file with correct encoding
-    const csvContent = gridRef.current?.api?.getDataAsCsv({ suppressQuotes: false }) ?? "";
+    // Export only the rows currently visible in the grid (respects active filters)
+    const api = gridRef.current?.api;
+    const csvContent = api?.getDataAsCsv({
+      suppressQuotes: false,
+      onlySelected: false,
+      // exportedRows: "filteredAndSorted" is the default — exports visible rows only
+    }) ?? "";
     const bom = "\uFEFF";
     const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -705,15 +762,28 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
         )}
         {selectedRowId && (
           <>
-            <GlowingButton onClick={handleDeleteRow} disabled={isDeleting} className="w-fit text-red-600" variant="ghost">
-              <Trash2 className="mr-2 h-4 w-4 text-red-600" /> {t.dashboard.delete}
-            </GlowingButton>
+            {showDeleteConfirm ? (
+              <>
+                <span className="text-xs text-red-500 font-medium">¿Eliminar?</span>
+                <GlowingButton onClick={handleDeleteRow} disabled={isDeleting} className="w-fit text-red-600" variant="ghost">
+                  {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4 text-red-600" />}
+                  {t.dashboard.delete}
+                </GlowingButton>
+                <GlowingButton onClick={() => setShowDeleteConfirm(false)} className="w-fit" variant="ghost">
+                  <X className="mr-2 h-4 w-4" /> {t.dashboard.cancel}
+                </GlowingButton>
+              </>
+            ) : (
+              <GlowingButton onClick={handleDeleteRow} disabled={isDeleting} className="w-fit text-red-600" variant="ghost">
+                <Trash2 className="mr-2 h-4 w-4 text-red-600" /> {t.dashboard.delete}
+              </GlowingButton>
+            )}
             {selectedJob && onShowHistory && (
               <GlowingButton onClick={() => onShowHistory(selectedJob)} className="w-fit" variant="ghost">
                 <History className="mr-2 h-4 w-4" /> {t.dashboard.history}
               </GlowingButton>
             )}
-            <GlowingButton onClick={() => setSelectedRowId(null)} className="w-fit" variant="ghost">
+            <GlowingButton onClick={() => { setSelectedRowId(null); setShowDeleteConfirm(false); }} className="w-fit" variant="ghost">
               <X className="mr-2 h-4 w-4" /> {t.dashboard.hide}
             </GlowingButton>
           </>
@@ -757,8 +827,10 @@ export default function JobGrid({ data, onJobsChange, onShowHistory }: Props) {
             localeText={localeText}
             stopEditingWhenCellsLoseFocus
             getRowId={(p) => p.data.id}
+            getRowClass={(p) => dirtyRows.has(p.data?.id ?? "") ? "ag-row-dirty" : ""}
             onCellValueChanged={onCellValueChanged}
             onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
+            onRowDoubleClicked={(e) => { if (e.data) onRowDoubleClick?.(e.data); }}
             onGridReady={fitColumns}
             onFirstDataRendered={fitColumns}
             domLayout="normal"

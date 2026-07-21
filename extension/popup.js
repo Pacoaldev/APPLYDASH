@@ -99,6 +99,7 @@ document.getElementById("save").addEventListener("click", async () => {
     platform:        document.getElementById("platform").value || null,
     location:        document.getElementById("location").value || null,
     salary:          document.getElementById("salary").value   || null,
+    notes:           document.getElementById("notes").value    || null,
     type:            typeVal || null,
     status:          document.getElementById("jobStatus").value,
     applicationLink: tab?.url ?? null,
