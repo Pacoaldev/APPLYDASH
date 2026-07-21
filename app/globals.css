@@ -319,7 +319,7 @@ body {
     border-left: 3px solid #f59e0b !important;
     background-color: rgba(245, 158, 11, 0.06) !important;
   }
-}
+
   .gradient-primary {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
   }
