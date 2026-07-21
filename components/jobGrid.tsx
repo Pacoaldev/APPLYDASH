@@ -302,6 +302,15 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         suppressMovable: true,
         pinned: "left",
         maxWidth: 40,
+        cellStyle: (p): Record<string, string> => {
+          if (p.data?.id === selectedRowId) {
+            const color = resolvedTheme === "dark" ? "#60A5FA" : "#087AD1";
+            return {
+              boxShadow: `inset 3px 0 0 0 ${color}`,
+            };
+          }
+          return {};
+        },
       },
       {
         headerName: c.company,
@@ -426,7 +435,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       },
     ];
     },
-    [t, locale]
+    [t, locale, selectedRowId, resolvedTheme]
   );
 
   const defaultColDef = useMemo<ColDef<Job>>(
