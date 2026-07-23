@@ -30,6 +30,8 @@ import {
   History,
   ExternalLink,
   Bell,
+  SlidersHorizontal,
+  RotateCcw,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -290,6 +292,98 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
   const [isImporting, setIsImporting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Column Visibility & Drag state
+  const [showColMenu, setShowColMenu] = useState(false);
+  const colMenuRef = useRef<HTMLDivElement>(null);
+  const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({
+    company: true,
+    position: true,
+    type: true,
+    appliedDate: true,
+    platform: true,
+    status: true,
+    location: true,
+    salary: true,
+    tags: true,
+    nextFollowUpDate: true,
+    notes: true,
+    daysAgo: true,
+    applicationLink: true,
+  });
+
+  const toggleableColumns = useMemo(() => [
+    { id: "company", label: t.dashboard.columns.company },
+    { id: "position", label: t.dashboard.columns.position },
+    { id: "type", label: t.dashboard.columns.type },
+    { id: "appliedDate", label: t.dashboard.columns.appliedDate },
+    { id: "platform", label: t.dashboard.columns.platform },
+    { id: "status", label: t.dashboard.columns.status },
+    { id: "location", label: t.dashboard.columns.location },
+    { id: "salary", label: t.dashboard.columns.salary },
+    { id: "tags", label: t.dashboard.tags },
+    { id: "nextFollowUpDate", label: t.dashboard.nextFollowUp },
+    { id: "notes", label: t.dashboard.columns.notes },
+    { id: "daysAgo", label: locale === "es" ? "Días" : "Days" },
+    { id: "applicationLink", label: t.dashboard.columns.link },
+  ], [t, locale]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (colMenuRef.current && !colMenuRef.current.contains(event.target as Node)) {
+        setShowColMenu(false);
+      }
+    };
+    if (showColMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showColMenu]);
+
+  const onColumnStateChanged = () => {
+    const api = gridRef.current?.api;
+    if (api) {
+      const state = api.getColumnState();
+      localStorage.setItem("applydash-column-state", JSON.stringify(state));
+
+      const nextMap: Record<string, boolean> = {};
+      state.forEach((col) => {
+        if (col.colId) {
+          nextMap[col.colId] = !col.hide;
+        }
+      });
+      setVisibleCols(nextMap);
+    }
+  };
+
+  const toggleColumnVisibility = (colId: string) => {
+    const api = gridRef.current?.api;
+    if (api) {
+      const isVisible = visibleCols[colId] !== false;
+      api.setColumnsVisible([colId], !isVisible);
+    }
+  };
+
+  const resetColumnState = () => {
+    const api = gridRef.current?.api;
+    if (api) {
+      localStorage.removeItem("applydash-column-state");
+      api.resetColumnState();
+      api.sizeColumnsToFit();
+
+      const state = api.getColumnState();
+      const nextMap: Record<string, boolean> = {};
+      state.forEach((col) => {
+        if (col.colId) {
+          nextMap[col.colId] = !col.hide;
+        }
+      });
+      setVisibleCols(nextMap);
+      toast.success(locale === "es" ? "Diseño de columnas restablecido" : "Column layout reset");
+    }
+  };
+
   const columnDefs = useMemo<ColDef<Job>[]>(
     () => {
       const c = t.dashboard.columns;
@@ -298,6 +392,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       return [
       {
         headerName: "#",
+        colId: "index",
         valueGetter: "node.rowIndex + 1",
         suppressMovable: true,
         pinned: "left",
@@ -315,6 +410,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.company,
         field: "company",
+        colId: "company",
         editable: true,
         minWidth: 130,
         tooltipField: "company",
@@ -322,6 +418,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.position,
         field: "position",
+        colId: "position",
         editable: true,
         minWidth: 150,
         tooltipField: "position",
@@ -329,6 +426,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.type,
         field: "type",
+        colId: "type",
         editable: true,
         minWidth: 110,
         cellEditor: "agSelectCellEditor",
@@ -349,6 +447,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.appliedDate,
         field: "appliedDate",
+        colId: "appliedDate",
         editable: true,
         minWidth: 110,
         cellEditor: "agDateCellEditor",
@@ -359,10 +458,11 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: c.platform, field: "platform", editable: true, minWidth: 110 },
+      { headerName: c.platform, field: "platform", colId: "platform", editable: true, minWidth: 110 },
       {
         headerName: c.status,
         field: "status",
+        colId: "status",
         editable: true,
         minWidth: 120,
         cellEditor: "agSelectCellEditor",
@@ -377,11 +477,12 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         },
         cellRenderer: StatusCellRenderer,
       },
-      { headerName: c.location, field: "location", editable: true, minWidth: 140, tooltipField: "location" },
-      { headerName: c.salary, field: "salary", editable: true, minWidth: 130, tooltipField: "salary" },
+      { headerName: c.location, field: "location", colId: "location", editable: true, minWidth: 140, tooltipField: "location" },
+      { headerName: c.salary, field: "salary", colId: "salary", editable: true, minWidth: 130, tooltipField: "salary" },
       {
         headerName: t.dashboard.tags,
         field: "tags",
+        colId: "tags",
         editable: true,
         valueGetter: (p) => (p.data?.tags ?? []).join(", "),
         valueSetter: (p) => {
@@ -392,6 +493,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: t.dashboard.nextFollowUp,
         field: "nextFollowUpDate",
+        colId: "nextFollowUpDate",
         editable: true,
         minWidth: 110,
         cellEditor: "agDateCellEditor",
@@ -403,7 +505,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: c.notes, field: "notes", editable: true, flex: 2, minWidth: 120 },
+      { headerName: c.notes, field: "notes", colId: "notes", editable: true, flex: 2, minWidth: 120 },
       {
         headerName: locale === "es" ? "Días" : "Days",
         colId: "daysAgo",
@@ -428,6 +530,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.link,
         field: "applicationLink",
+        colId: "applicationLink",
         editable: true,
         minWidth: 160,
         cellRenderer: LinkCellRenderer,
@@ -454,6 +557,39 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
 
   const fitColumns = () => {
     gridRef.current?.api?.sizeColumnsToFit();
+  };
+
+  const onGridReady = (params: any) => {
+    const storedState = localStorage.getItem("applydash-column-state");
+    if (storedState) {
+      try {
+        params.api.applyColumnState({
+          state: JSON.parse(storedState),
+          applyOrder: true,
+        });
+
+        const state = params.api.getColumnState();
+        const nextMap: Record<string, boolean> = {};
+        state.forEach((col: any) => {
+          if (col.colId) {
+            nextMap[col.colId] = !col.hide;
+          }
+        });
+        setVisibleCols(nextMap);
+      } catch (e) {
+        console.error("Failed to restore column state", e);
+        params.api.sizeColumnsToFit();
+      }
+    } else {
+      params.api.sizeColumnsToFit();
+    }
+  };
+
+  const onFirstDataRendered = (params: any) => {
+    const storedState = localStorage.getItem("applydash-column-state");
+    if (!storedState) {
+      params.api.sizeColumnsToFit();
+    }
   };
 
   const handleAddRow = () => {
@@ -797,6 +933,54 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
             </GlowingButton>
           </>
         )}
+        <div className="relative" ref={colMenuRef}>
+          <Button
+            onClick={() => setShowColMenu(!showColMenu)}
+            variant="ghost"
+            className="w-fit"
+            title={locale === "es" ? "Mostrar/Ocultar Columnas" : "Show/Hide Columns"}
+          >
+            <SlidersHorizontal className="mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">{locale === "es" ? "Columnas" : "Columns"}</span>
+          </Button>
+
+          {showColMenu && (
+            <div className="absolute right-0 mt-2 w-64 rounded-xl border border-border bg-slate-950/95 backdrop-blur-md p-3 shadow-2xl z-50 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {locale === "es" ? "Columnas" : "Columns"}
+                </span>
+                <button
+                  onClick={resetColumnState}
+                  className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors cursor-pointer"
+                  title={locale === "es" ? "Restablecer columnas" : "Reset columns"}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {locale === "es" ? "Restablecer" : "Reset"}
+                </button>
+              </div>
+              <div className="flex flex-col gap-1">
+                {toggleableColumns.map((col) => {
+                  const isVisible = visibleCols[col.id] !== false;
+                  return (
+                    <label
+                      key={col.id}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800/80 cursor-pointer select-none text-sm transition-colors text-slate-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isVisible}
+                        onChange={() => toggleColumnVisibility(col.id)}
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900 transition-colors cursor-pointer"
+                      />
+                      <span>{col.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
         <Button onClick={handleExportCSV} variant="ghost" className="w-fit" title={t.dashboard.export}>
           <Download className="mr-2 h-4 w-4" />
         </Button>
@@ -840,8 +1024,11 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
             onCellValueChanged={onCellValueChanged}
             onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
             onRowDoubleClicked={(e) => { if (e.data) onRowDoubleClick?.(e.data); }}
-            onGridReady={fitColumns}
-            onFirstDataRendered={fitColumns}
+            onGridReady={onGridReady}
+            onFirstDataRendered={onFirstDataRendered}
+            onColumnMoved={onColumnStateChanged}
+            onColumnResized={onColumnStateChanged}
+            onColumnVisible={onColumnStateChanged}
             domLayout="normal"
             enableBrowserTooltips
             tooltipShowDelay={400}
