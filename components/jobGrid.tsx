@@ -996,7 +996,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
       </div>
 
-      <div className="w-full overflow-x-auto touch-pan-y">
+      <div className="hidden md:block w-full overflow-x-auto touch-pan-y">
         <div
           ref={gridWrapRef}
           title={t.dashboard.resizeHint}
@@ -1035,6 +1035,156 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
           />
           </div>
         </div>
+      </div>
+
+      {/* Vista Mobile: Listado de tarjetas verticales */}
+      <div className="block md:hidden space-y-3 mt-1">
+        {rowData.length === 0 ? (
+          <div className="p-8 text-center text-slate-500 border border-dashed border-border rounded-xl">
+            {locale === "es" ? "No se encontraron ofertas." : "No jobs found."}
+          </div>
+        ) : (
+          rowData.map((job) => {
+            const isSelected = job.id === selectedRowId;
+            const style = getStatusStyle(job.status);
+            const dateFormatted = formatDateDDMMYY(job.appliedDate);
+
+            if (job.id === tempRowId) {
+              return (
+                <div key={job.id} className="p-4 rounded-xl border border-blue-500 bg-slate-950 shadow-lg shadow-blue-500/10">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">{t.dashboard.columns.company}</label>
+                      <input
+                        className="w-full px-3 py-1.5 rounded-md border border-border bg-slate-900 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={job.company ?? ""}
+                        onChange={(e) => {
+                          const updated = rowData.map(j => j.id === job.id ? { ...j, company: e.target.value } : j);
+                          setRowData(updated);
+                        }}
+                        placeholder={t.dashboard.columns.company}
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">{t.dashboard.columns.position}</label>
+                      <input
+                        className="w-full px-3 py-1.5 rounded-md border border-border bg-slate-900 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={job.position ?? ""}
+                        onChange={(e) => {
+                          const updated = rowData.map(j => j.id === job.id ? { ...j, position: e.target.value } : j);
+                          setRowData(updated);
+                        }}
+                        placeholder={t.dashboard.columns.position}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <GlowingButton onClick={handleSaveRow} disabled={isSaving} className="flex-1 text-xs" variant="outline">
+                        {isSaving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Check className="h-3 w-3 text-green-600 mr-1" />}
+                        {t.dashboard.save}
+                      </GlowingButton>
+                      <GlowingButton onClick={handleCancelAdd} disabled={isSaving} className="flex-1 text-xs" variant="ghost">
+                        <X className="h-3 w-3 text-red-600 mr-1" /> {t.dashboard.cancel}
+                      </GlowingButton>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={job.id}
+                onClick={() => setSelectedRowId(job.id)}
+                className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "border-blue-500 bg-slate-900 shadow-lg shadow-blue-500/10"
+                    : "border-border/60 bg-slate-900/40 hover:bg-slate-900/60"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-slate-100 text-base leading-snug truncate">
+                      {job.position || "—"}
+                    </h3>
+                    <p className="text-sm text-slate-400 font-medium truncate">
+                      {job.company || "—"}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${style.bg} ${style.text}`}
+                  >
+                    {displayStatus(job.status, locale)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-400 mt-3 pt-3 border-t border-slate-800/60">
+                  <div>
+                    <span className="text-slate-500 block mb-0.5">{t.dashboard.columns.appliedDate}</span>
+                    <span className="text-slate-300">{dateFormatted || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block mb-0.5">{t.dashboard.columns.type}</span>
+                    <span className="text-slate-300">{displayType(job.type, locale)}</span>
+                  </div>
+                  {job.location && job.location !== "undisclosed" && (
+                    <div className="min-w-0">
+                      <span className="text-slate-500 block mb-0.5">{t.dashboard.columns.location}</span>
+                      <span className="truncate block text-slate-300">{job.location}</span>
+                    </div>
+                  )}
+                  {job.salary && job.salary !== "0" && (
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">{t.dashboard.columns.salary}</span>
+                      <span className="text-slate-300">{job.salary}</span>
+                    </div>
+                  )}
+                </div>
+
+                {job.tags && job.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-3">
+                    {job.tags.map((tag) => (
+                      <span key={tag} className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-medium text-slate-300">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {isSelected && (
+                  <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-slate-800/60">
+                    {onShowHistory && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onShowHistory(job);
+                        }}
+                      >
+                        <History className="h-3.5 w-3.5 mr-1" />
+                        {t.dashboard.history}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRowDoubleClick?.(job);
+                      }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                      {locale === "es" ? "Editar" : "Edit"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
