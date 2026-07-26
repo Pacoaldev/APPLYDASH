@@ -5,7 +5,7 @@ import { Job } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
-import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock } from "lucide-react";
+import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye } from "lucide-react";
 import { displayStatus, displayType, canonicalStatus, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
@@ -170,7 +170,7 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
 
           <div>
             <label className={labelCls}>{locale === "es" ? "Seguimiento" : "Tracking"}</label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -180,7 +180,7 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
                     : [...currentTags, "CV Visto"];
                   set("tags", nextTags);
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
                   (form.tags ?? []).includes("CV Visto")
                     ? "border-blue-500/30 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
                     : "border-border hover:bg-muted text-muted-foreground"
@@ -194,12 +194,31 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
                 type="button"
                 onClick={() => {
                   const currentTags = form.tags ?? [];
+                  const nextTags = currentTags.includes("Solicitud Vista")
+                    ? currentTags.filter((t) => t !== "Solicitud Vista")
+                    : [...currentTags, "Solicitud Vista"];
+                  set("tags", nextTags);
+                }}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                  (form.tags ?? []).includes("Solicitud Vista")
+                    ? "border-purple-500/30 bg-purple-500/10 text-purple-500 hover:bg-purple-500/20"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <Eye className="h-4 w-4" />
+                {locale === "es" ? "Vista" : "Seen"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTags = form.tags ?? [];
                   const nextTags = currentTags.includes("Carta Presentación")
                     ? currentTags.filter((t) => t !== "Carta Presentación")
                     : [...currentTags, "Carta Presentación"];
                   set("tags", nextTags);
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
                   (form.tags ?? []).includes("Carta Presentación")
                     ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20"
                     : "border-border hover:bg-muted text-muted-foreground"
@@ -218,7 +237,7 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
                     : [...currentTags, "Cerrada"];
                   set("tags", nextTags);
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
                   (form.tags ?? []).includes("Cerrada")
                     ? "border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20"
                     : "border-border hover:bg-muted text-muted-foreground"

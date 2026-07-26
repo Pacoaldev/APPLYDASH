@@ -36,6 +36,7 @@ import {
   FileText,
   Mail,
   Lock,
+  Eye,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -152,6 +153,7 @@ function FollowUpCellRenderer(params: ICellRendererParams<Job>) {
 function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: (job: Job, tag: string) => void }) {
   const tags = params.data?.tags ?? [];
   const hasCv = tags.includes("CV Visto");
+  const hasSeen = tags.includes("Solicitud Vista");
   const hasMail = tags.includes("Carta Presentación");
   const hasClosed = tags.includes("Cerrada");
 
@@ -165,6 +167,13 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
         className={`p-1 rounded transition-colors ${hasCv ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
       >
         <FileText className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => params.onToggleTag(params.data!, "Solicitud Vista")}
+        title="Solicitud Vista"
+        className={`p-1 rounded transition-colors ${hasSeen ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+      >
+        <Eye className="h-4 w-4" />
       </button>
       <button
         onClick={() => params.onToggleTag(params.data!, "Carta Presentación")}
@@ -569,8 +578,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.tracking,
         colId: "tracking",
-        minWidth: 130,
-        maxWidth: 150,
+        minWidth: 155,
+        maxWidth: 175,
         cellRenderer: TrackingCellRenderer,
         cellRendererParams: {
           onToggleTag: handleToggleTag,
