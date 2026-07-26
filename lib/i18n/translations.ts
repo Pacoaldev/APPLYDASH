@@ -86,6 +86,7 @@ export const translations = {
         salary: "Salary",
         notes: "Notes",
         link: "Link",
+        tracking: "Tracking",
       },
       kanbanColumns: {
         applied: "Applied",
@@ -203,6 +204,7 @@ export const translations = {
         salary: "Salario",
         notes: "Notas",
         link: "Enlace",
+        tracking: "Seguimiento",
       },
       toast: {
         saveError: "Error al guardar la oferta",

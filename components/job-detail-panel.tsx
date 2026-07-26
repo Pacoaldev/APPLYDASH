@@ -5,7 +5,7 @@ import { Job } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
-import { X, Save, ExternalLink, Loader2 } from "lucide-react";
+import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock } from "lucide-react";
 import { displayStatus, displayType, canonicalStatus, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
@@ -165,6 +165,68 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
             <div>
               <label className={labelCls}>{t.dashboard.columns.salary}</label>
               <input className={inputCls} value={form.salary ?? ""} onChange={(e) => set("salary", e.target.value)} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>{locale === "es" ? "Seguimiento" : "Tracking"}</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTags = form.tags ?? [];
+                  const nextTags = currentTags.includes("CV Visto")
+                    ? currentTags.filter((t) => t !== "CV Visto")
+                    : [...currentTags, "CV Visto"];
+                  set("tags", nextTags);
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                  (form.tags ?? []).includes("CV Visto")
+                    ? "border-blue-500/30 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                {locale === "es" ? "CV Visto" : "CV Seen"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTags = form.tags ?? [];
+                  const nextTags = currentTags.includes("Carta Presentación")
+                    ? currentTags.filter((t) => t !== "Carta Presentación")
+                    : [...currentTags, "Carta Presentación"];
+                  set("tags", nextTags);
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                  (form.tags ?? []).includes("Carta Presentación")
+                    ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <Mail className="h-4 w-4" />
+                {locale === "es" ? "Carta" : "Cover Letter"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTags = form.tags ?? [];
+                  const nextTags = currentTags.includes("Cerrada")
+                    ? currentTags.filter((t) => t !== "Cerrada")
+                    : [...currentTags, "Cerrada"];
+                  set("tags", nextTags);
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                  (form.tags ?? []).includes("Cerrada")
+                    ? "border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <Lock className="h-4 w-4" />
+                {locale === "es" ? "Cerrada" : "Closed"}
+              </button>
             </div>
           </div>
 

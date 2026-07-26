@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useCallback,
 } from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -32,6 +33,9 @@ import {
   Bell,
   SlidersHorizontal,
   RotateCcw,
+  FileText,
+  Mail,
+  Lock,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -142,6 +146,41 @@ function FollowUpCellRenderer(params: ICellRendererParams<Job>) {
       {due && <Bell className="h-3 w-3" />}
       {display || "—"}
     </span>
+  );
+}
+
+function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: (job: Job, tag: string) => void }) {
+  const tags = params.data?.tags ?? [];
+  const hasCv = tags.includes("CV Visto");
+  const hasMail = tags.includes("Carta Presentación");
+  const hasClosed = tags.includes("Cerrada");
+
+  if (!params.data) return null;
+
+  return (
+    <div className="flex items-center gap-2.5 h-full" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => params.onToggleTag(params.data!, "CV Visto")}
+        title="CV Visto"
+        className={`p-1 rounded transition-colors ${hasCv ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+      >
+        <FileText className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => params.onToggleTag(params.data!, "Carta Presentación")}
+        title="Carta Presentación"
+        className={`p-1 rounded transition-colors ${hasMail ? "text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+      >
+        <Mail className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => params.onToggleTag(params.data!, "Cerrada")}
+        title="Solicitud Cerrada"
+        className={`p-1 rounded transition-colors ${hasClosed ? "text-red-500 bg-red-500/10 hover:bg-red-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+      >
+        <Lock className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 
@@ -309,6 +348,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     notes: true,
     daysAgo: true,
     applicationLink: true,
+    tracking: true,
   });
 
   const toggleableColumns = useMemo(() => [
@@ -325,6 +365,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     { id: "notes", label: t.dashboard.columns.notes },
     { id: "daysAgo", label: locale === "es" ? "Días" : "Days" },
     { id: "applicationLink", label: t.dashboard.columns.link },
+    { id: "tracking", label: t.dashboard.columns.tracking },
   ], [t, locale]);
 
   useEffect(() => {
@@ -383,6 +424,41 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       toast.success(locale === "es" ? "Diseño de columnas restablecido" : "Column layout reset");
     }
   };
+
+  const handleToggleTag = useCallback(
+    async (job: Job, tag: string) => {
+      if (job.id.toString().startsWith("temp_")) return;
+      const isPresent = job.tags.includes(tag);
+      const nextTags = isPresent
+        ? job.tags.filter((t) => t !== tag)
+        : [...job.tags, tag];
+
+      const updatedJob = { ...job, tags: nextTags };
+
+      // Update locally first (optimistic UI)
+      updateRows(rowData.map((j) => (j.id === job.id ? updatedJob : j)));
+
+      try {
+        const result = await updateJob(updatedJob);
+        if (result.error) {
+          toast.error(t.dashboard.toast.updateError, { description: result.error });
+          // Rollback
+          updateRows(rowData.map((j) => (j.id === job.id ? job : j)));
+        } else {
+          toast.success(t.dashboard.toast.updateSuccess);
+          // If the grid has onJobsChange, call it
+          if (onJobsChange) {
+            onJobsChange(rowData.map((j) => (j.id === job.id ? (result.data as Job) : j)));
+          }
+        }
+      } catch {
+        toast.error(t.dashboard.toast.unexpectedError);
+        // Rollback
+        updateRows(rowData.map((j) => (j.id === job.id ? job : j)));
+      }
+    },
+    [rowData, updateRows, onJobsChange, t]
+  );
 
   const columnDefs = useMemo<ColDef<Job>[]>(
     () => {
@@ -491,6 +567,16 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         },
       },
       {
+        headerName: c.tracking,
+        colId: "tracking",
+        minWidth: 130,
+        maxWidth: 150,
+        cellRenderer: TrackingCellRenderer,
+        cellRendererParams: {
+          onToggleTag: handleToggleTag,
+        },
+      },
+      {
         headerName: t.dashboard.nextFollowUp,
         field: "nextFollowUpDate",
         colId: "nextFollowUpDate",
@@ -538,7 +624,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       },
     ];
     },
-    [t, locale, selectedRowId, resolvedTheme]
+    [t, locale, selectedRowId, resolvedTheme, handleToggleTag]
   );
 
   const defaultColDef = useMemo<ColDef<Job>>(
@@ -554,6 +640,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     }),
     []
   );
+
+
 
   const fitColumns = () => {
     gridRef.current?.api?.sizeColumnsToFit();
