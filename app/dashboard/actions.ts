@@ -26,22 +26,7 @@ function formatDateForDisplay(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatJob(job: {
-  id: string;
-  userid: string;
-  company: string | null;
-  position: string | null;
-  type: string | null;
-  applicationLink: string | null;
-  status: string | null;
-  appliedDate: Date | null;
-  location: string | null;
-  platform: string | null;
-  salary: string | null;
-  notes: string | null;
-  nextFollowUpDate: Date | null;
-  tags: string[];
-}) {
+function formatJob(job: any) {
   return {
     ...job,
     appliedDate: job.appliedDate ? formatDateForDisplay(job.appliedDate) : null,
@@ -49,6 +34,10 @@ function formatJob(job: {
       ? formatDateForDisplay(job.nextFollowUpDate)
       : null,
     tags: job.tags ?? [],
+    recruiterName: job.recruiterName ?? null,
+    recruiterEmail: job.recruiterEmail ?? null,
+    recruiterLinkedin: job.recruiterLinkedin ?? null,
+    tasks: Array.isArray(job.tasks) ? job.tasks : [],
   };
 }
 
@@ -69,7 +58,7 @@ export async function createJob(data: unknown) {
     return { error: "Invalid data provided. Please check the fields." };
   }
 
-  const { appliedDate, nextFollowUpDate, tags, ...jobData } = validation.data;
+  const { appliedDate, nextFollowUpDate, tags, tasks, ...jobData } = validation.data;
 
   const parsedAppliedDate = parseDateField(appliedDate);
 
@@ -90,6 +79,7 @@ export async function createJob(data: unknown) {
         appliedDate: parsedAppliedDate,
         nextFollowUpDate: parsedNextFollowUpDate,
         tags: parseTags(tags),
+        tasks: tasks ? (tasks as any) : [],
         userid: user.id,
       },
     });
@@ -123,7 +113,7 @@ export async function updateJob(data: unknown) {
     return { error: "Invalid data for update." };
   }
 
-  const { id, appliedDate, nextFollowUpDate, tags, ...jobData } = validation.data;
+  const { id, appliedDate, nextFollowUpDate, tags, tasks, ...jobData } = validation.data;
 
   try {
     const existing = await prisma.job.findFirst({
@@ -138,6 +128,7 @@ export async function updateJob(data: unknown) {
         appliedDate: parseDateField(appliedDate),
         nextFollowUpDate: parseDateField(nextFollowUpDate),
         tags: tags !== undefined ? parseTags(tags) : undefined,
+        tasks: tasks !== undefined ? (tasks as any) : undefined,
       },
     });
 
@@ -214,7 +205,7 @@ export async function importJobs(rows: unknown[]) {
       continue;
     }
 
-    const { appliedDate, nextFollowUpDate, tags, ...jobData } = validation.data;
+    const { appliedDate, nextFollowUpDate, tags, tasks, ...jobData } = validation.data;
     try {
       const job = await prisma.job.create({
         data: {
@@ -222,6 +213,7 @@ export async function importJobs(rows: unknown[]) {
           appliedDate: parseDateField(appliedDate),
           nextFollowUpDate: parseDateField(nextFollowUpDate),
           tags: parseTags(tags),
+          tasks: tasks ? (tasks as any) : [],
           userid: user.id,
         },
       });

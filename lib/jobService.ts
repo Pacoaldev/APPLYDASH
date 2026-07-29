@@ -47,6 +47,10 @@ export async function getJobsForUser(userId: string): Promise<Job[]> {
       notes: job.notes,
       nextFollowUpDate: formatDate(job.nextFollowUpDate),
       tags: job.tags ?? [],
+      recruiterName: job.recruiterName,
+      recruiterEmail: job.recruiterEmail,
+      recruiterLinkedin: job.recruiterLinkedin,
+      tasks: Array.isArray(job.tasks) ? (job.tasks as any) : [],
       statusHistory: mapHistory(job.statusHistory),
     }));
   } catch (error) {

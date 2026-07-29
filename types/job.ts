@@ -6,6 +6,12 @@ export interface JobStatusHistoryEntry {
   changedAt: string;
 }
 
+export interface JobTask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface Job {
   id: string;
   userid: string;
@@ -21,6 +27,10 @@ export interface Job {
   notes: string | null;
   nextFollowUpDate: string | null;
   tags: string[];
+  recruiterName?: string | null;
+  recruiterEmail?: string | null;
+  recruiterLinkedin?: string | null;
+  tasks?: JobTask[];
   statusHistory?: JobStatusHistoryEntry[];
 }
 
