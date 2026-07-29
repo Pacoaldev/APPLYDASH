@@ -24,13 +24,13 @@ export async function getJobsForUser(userId: string): Promise<Job[]> {
   const { prisma } = await import("@/lib/prisma");
 
   try {
-    const jobs = await prisma.job.findMany({
+    const jobs = (await prisma.job.findMany({
       where: { userid: userId },
       orderBy: { createdAt: "asc" },
       include: {
         statusHistory: { orderBy: { changedAt: "desc" }, take: 20 },
       },
-    });
+    })) as any[];
 
     return jobs.map((job) => ({
       id: job.id,
@@ -55,7 +55,7 @@ export async function getJobsForUser(userId: string): Promise<Job[]> {
     }));
   } catch (error) {
     console.error("Failed to fetch jobs:", error);
-    return [];
+    throw error;
   }
 }
 
