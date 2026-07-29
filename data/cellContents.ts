@@ -51,6 +51,7 @@ const cellContents = {
     "Phone Screen",
     "Technical Round",
     "Final Round",
+    "Closed",
   ],
   statusEs: [
     "Aplicado",
@@ -66,6 +67,7 @@ const cellContents = {
     "Llamada telefónica",
     "Prueba técnica",
     "Entrevista final",
+    "Oferta cerrada",
   ],
   type: ["Remote", "Office", "Hybrid"],
   typeEs: ["Remoto", "Presencial", "Híbrido"],

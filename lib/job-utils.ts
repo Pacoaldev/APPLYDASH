@@ -42,6 +42,7 @@ export const STATUS_ES_TO_EN: Record<string, string> = {
   "Llamada telefónica": "Phone Screen",
   "Prueba técnica": "Technical Round",
   "Entrevista final": "Final Round",
+  "Oferta cerrada": "Closed",
 };
 
 const STATUS_EN_TO_ES: Record<string, string> = Object.fromEntries(
@@ -86,6 +87,7 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; shadow: s
   Rejected:        { bg: "bg-red-500 dark:bg-red-600",             text: "text-white",                             shadow: "shadow-[0_3px_0_0_#b91c1c] dark:shadow-[0_3px_0_0_#7f1d1d]" },
   Withdrawn:       { bg: "bg-gray-200 dark:bg-gray-700",           text: "text-gray-600 dark:text-gray-300",       shadow: "shadow-[0_2px_0_0_#9ca3af] dark:shadow-[0_2px_0_0_#374151]" },
   "On Hold":       { bg: "bg-slate-200 dark:bg-slate-700",         text: "text-slate-600 dark:text-slate-300",     shadow: "shadow-[0_2px_0_0_#94a3b8] dark:shadow-[0_2px_0_0_#334155]" },
+  Closed:          { bg: "bg-zinc-200 dark:bg-zinc-800",           text: "text-zinc-600 dark:text-zinc-400",       shadow: "shadow-[0_2px_0_0_#d4d4d8] dark:shadow-[0_2px_0_0_#27272a]" },
 };
 
 export const INTERVIEW_STATUSES = [
@@ -100,7 +102,7 @@ export const KANBAN_COLUMNS = [
   { key: "Applied", statuses: ["Applied", "Pending", "Follow Up"] },
   { key: "Interview", statuses: INTERVIEW_STATUSES },
   { key: "Offer", statuses: ["Offer", "Accepted", "Negotiating"] },
-  { key: "Rejected", statuses: ["Rejected", "Withdrawn", "On Hold"] },
+  { key: "Rejected", statuses: ["Rejected", "Withdrawn", "On Hold", "Closed"] },
 ] as const;
 
 export function getStatusStyle(status: string | null) {
