@@ -32,14 +32,20 @@ export function JobDashboard({ data }: Props) {
   }, [data]);
 
   const rejectedCount = useMemo(() => 
-    jobs.filter((j) => canonicalStatus(j.status) === "Rejected").length,
+    jobs.filter((j) => {
+      const status = canonicalStatus(j.status);
+      return status === "Rejected" || status === "Closed";
+    }).length,
     [jobs]
   );
 
   const filteredJobs = useMemo(() => {
     const byFilter = filterJobs(jobs, filter);
     return hideRejected
-      ? byFilter.filter((j) => canonicalStatus(j.status) !== "Rejected")
+      ? byFilter.filter((j) => {
+          const status = canonicalStatus(j.status);
+          return status !== "Rejected" && status !== "Closed";
+        })
       : byFilter;
   }, [jobs, filter, hideRejected]);
 
