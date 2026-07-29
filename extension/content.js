@@ -195,7 +195,21 @@ function scrapeLinkedIn(base) {
   const typeRaw = base.type ||
     text(".job-details-jobs-unified-top-card__workplace-type",
          ".jobs-unified-top-card__workplace-type",
-         "[class*='workplace-type']");
+         "[class*='workplace-type']",
+         "[class*='workplaceType']",
+         ".jobs-unified-top-card__job-insight",
+         ".job-details-jobs-unified-top-card__job-insight",
+         (() => {
+           const topText = text(".jobs-unified-top-card__primary-description", 
+                                ".job-details-jobs-unified-top-card__primary-description-without-tagline",
+                                "main");
+           const match = topText.match(/\b(remoto|remote|teletrabajo|h[ií]brido|hybrid|presencial|on-?site|on.?site|office)\b/i);
+           return match ? match[0] : "";
+         })(),
+         (() => {
+           const match = document.body.innerText.substring(0, 3000).match(/\b(remoto|remote|teletrabajo|h[ií]brido|hybrid|presencial|on-?site|on.?site|office)\b/i);
+           return match ? match[0] : "";
+         })());
 
   let location = base.location;
   if (!location) {
@@ -227,11 +241,32 @@ function scrapeLinkedIn(base) {
     return findInPage(/([$€£][\d][\d.,]*\s*[kK]?\s*[-–]\s*[$€£]?[\d][\d.,]*|[\d][\d.,]*\s*[kK]?\s*[-–]\s*[\d][\d.,]*\s*[$€£])/);
   })();
 
+  const recruiterName = text(
+    ".jobs-poster__name",
+    ".hirer-card__name",
+    "[class*='hiring-team'] [class*='name']",
+    "[class*='jobs-poster'] [class*='name']",
+    "[class*='hirer-card'] [class*='name']"
+  );
+
+  let recruiterLinkedin = attr("href", 
+    ".jobs-poster a[href*='/in/']", 
+    ".hirer-card a[href*='/in/']", 
+    "[class*='hiring-team'] a[href*='/in/']",
+    "[class*='jobs-poster'] a[href*='/in/']",
+    "[class*='hirer-card'] a[href*='/in/']"
+  );
+  if (recruiterLinkedin && recruiterLinkedin.startsWith("/")) {
+    recruiterLinkedin = `https://www.linkedin.com${recruiterLinkedin}`;
+  }
+
   return { company: company.replace(/\s+/g, " ").trim(), 
            position: position.replace(/\s+/g, " ").trim(), 
            platform: "LinkedIn",
            type: normalizeType(typeRaw), location: location || "",
-           salary: normalizeSalary(salaryRaw) };
+           salary: normalizeSalary(salaryRaw),
+           recruiterName: recruiterName || null,
+           recruiterLinkedin: recruiterLinkedin || null };
 }
 
 function scrapeInfoJobs(base) {

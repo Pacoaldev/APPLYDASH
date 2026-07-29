@@ -93,6 +93,9 @@ document.getElementById("save").addEventListener("click", async () => {
   const typeVal = document.getElementById("jobType").value;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+  const storedData = await chrome.storage.local.get(["scraped"]);
+  const scraped = storedData.scraped || {};
+
   const payload = {
     company:         document.getElementById("company").value  || null,
     position:        document.getElementById("position").value || null,
@@ -104,6 +107,8 @@ document.getElementById("save").addEventListener("click", async () => {
     status:          document.getElementById("jobStatus").value,
     applicationLink: tab?.url ?? null,
     appliedDate:     new Date().toISOString().split("T")[0],
+    recruiterName:   scraped.recruiterName || null,
+    recruiterLinkedin: scraped.recruiterLinkedin || null,
   };
 
   try {
