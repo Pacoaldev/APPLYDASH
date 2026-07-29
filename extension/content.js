@@ -2,16 +2,22 @@
 
 function text(...selectors) {
   for (const sel of selectors) {
-    const t = document.querySelector(sel)?.textContent?.trim();
-    if (t) return t;
+    const elements = document.querySelectorAll(sel);
+    for (const el of elements) {
+      const t = el.textContent?.trim();
+      if (t) return t;
+    }
   }
   return "";
 }
 
 function attr(attribute, ...selectors) {
   for (const sel of selectors) {
-    const v = document.querySelector(sel)?.[attribute]?.trim();
-    if (v) return v;
+    const elements = document.querySelectorAll(sel);
+    for (const el of elements) {
+      const v = el.getAttribute ? el.getAttribute(attribute)?.trim() : el[attribute]?.trim();
+      if (v) return v;
+    }
   }
   return "";
 }
@@ -154,16 +160,23 @@ function normalizeSalary(raw) {
 // These complement JSON-LD for fields it doesn't always include (platform, type from DOM)
 
 function scrapeLinkedIn(base) {
+  // Parse document title as a fallback (e.g. "Position | Company")
+  const titleParts = document.title.split(/[|\-–]/).map(p => p.trim()).filter(Boolean);
+  const fallbackPosition = titleParts[0] || "";
+  const fallbackCompany = (titleParts[1] && !/linkedin/i.test(titleParts[1])) ? titleParts[1] : "";
+
   const position = base.position ||
     text(".job-details-jobs-unified-top-card__job-title h1",
          ".jobs-unified-top-card__job-title h1", 
          "main h1", 
          "h1",
          "[class*='job-title']", 
-         "[class*='jobTitle']");
+         "[class*='jobTitle']") ||
+    fallbackPosition;
 
   const company = base.company ||
-    text(".job-details-jobs-unified-top-card__company-name a",
+    text("a[href*='/company/']",
+         ".job-details-jobs-unified-top-card__company-name a",
          ".job-details-jobs-unified-top-card__company-name",
          ".jobs-unified-top-card__company-name a",
          ".jobs-unified-top-card__company-name",
@@ -173,6 +186,7 @@ function scrapeLinkedIn(base) {
          "[class*='company']",
          ".topcard__flavor a",
          ".topcard__flavor") ||
+    fallbackCompany ||
     (() => {
       const og = attr("content", "meta[property='og:title']");
       return og.match(/ at (.+?)( \||$)/)?.[1]?.trim() || "";
@@ -213,7 +227,9 @@ function scrapeLinkedIn(base) {
     return findInPage(/([$€£][\d][\d.,]*\s*[kK]?\s*[-–]\s*[$€£]?[\d][\d.,]*|[\d][\d.,]*\s*[kK]?\s*[-–]\s*[\d][\d.,]*\s*[$€£])/);
   })();
 
-  return { company, position, platform: "LinkedIn",
+  return { company: company.replace(/\s+/g, " ").trim(), 
+           position: position.replace(/\s+/g, " ").trim(), 
+           platform: "LinkedIn",
            type: normalizeType(typeRaw), location: location || "",
            salary: normalizeSalary(salaryRaw) };
 }
