@@ -319,6 +319,14 @@ MIT License — see [LICENSE](LICENSE).
 
 ## 📝 Changelog
 
+### Late July 2026 — Usability & Functionality Enhancements
+
+- **Keyboard shortcuts modal** — Clickable keyboard helper modal added to the navbar (EN/ES) displaying commands (`N`, `S`, `Escape`).
+- **Recruiter fields** — Added `recruiterName`, `recruiterEmail`, and `recruiterLinkedin` to the `Job` model and form inside the slide-in detail panel.
+- **Subtasks checklist** — Fully interactive task checklist within the job detail panel, persisted directly inside a `tasks` JSON field in the database.
+- **Closed status stats sync** — Jobs with "Closed" ("Oferta cerrada") status now count towards the "Rejected" ("Rechazadas") stat block on the dashboard header.
+- **Robust LinkedIn scraper** — Scraper now falls back to browser tab title parsing for title/company, extracts recruiter name and LinkedIn URL from the hiring team section ("Anunciante del empleo"), and uses regex fallbacks for modal type (Remote/Office/Hybrid).
+
 ### July 2026 — UX/UI improvements
 
 - **Weekly activity chart** — Collapsible area chart (Recharts) showing applications per week with peak and average; lives between stats and filters
