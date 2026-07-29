@@ -28,6 +28,16 @@ export const jobSchema = z.object({
   notes: z.string().nullable().optional(),
   nextFollowUpDate: optionalDateString,
   tags: z.union([z.array(z.string()), z.string()]).nullable().optional(),
+  recruiterName: z.string().nullable().optional(),
+  recruiterEmail: z.string().nullable().optional(),
+  recruiterLinkedin: z.string().nullable().optional(),
+  tasks: z.array(
+    z.object({
+      id: z.string(),
+      text: z.string(),
+      completed: z.boolean(),
+    })
+  ).nullable().optional(),
 });
 
 export const updateJobSchema = jobSchema.extend({

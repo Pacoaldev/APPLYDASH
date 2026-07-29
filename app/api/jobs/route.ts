@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid data provided." }, { status: 400 });
     }
 
-    const { appliedDate, tags, ...jobData } = validation.data;
+    const { appliedDate, tags, tasks, ...jobData } = validation.data;
 
     await ensureUserExists(user.id, user.email, user.user_metadata?.display_name);
 
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
         appliedDate: parsedAppliedDate,
         nextFollowUpDate,
         tags: parseTags(tags),
+        tasks: tasks ? (tasks as any) : [],
         userid: user.id,
       },
     });

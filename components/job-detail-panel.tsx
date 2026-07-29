@@ -5,7 +5,7 @@ import { Job } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
-import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye } from "lucide-react";
+import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2 } from "lucide-react";
 import { displayStatus, displayType, canonicalStatus, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
@@ -19,6 +19,7 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
   const { t, locale } = useLocale();
   const [form, setForm] = useState<Job | null>(null);
   const [saving, setSaving] = useState(false);
+  const [newTaskText, setNewTaskText] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Sync form when job changes
@@ -40,8 +41,34 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
 
   if (!form) return null;
 
-  const set = (key: keyof Job, value: string | string[] | null) =>
+  const set = (key: keyof Job, value: any) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+
+  const addTask = () => {
+    if (!newTaskText.trim()) return;
+    const newTask = {
+      id: Math.random().toString(36).substring(2, 9),
+      text: newTaskText.trim(),
+      completed: false,
+    };
+    const currentTasks = form.tasks ?? [];
+    set("tasks", [...currentTasks, newTask]);
+    setNewTaskText("");
+  };
+
+  const toggleTask = (taskId: string) => {
+    const currentTasks = form.tasks ?? [];
+    const updatedTasks = currentTasks.map((t) =>
+      t.id === taskId ? { ...t, completed: !t.completed } : t
+    );
+    set("tasks", updatedTasks);
+  };
+
+  const removeTask = (taskId: string) => {
+    const currentTasks = form.tasks ?? [];
+    const updatedTasks = currentTasks.filter((t) => t.id !== taskId);
+    set("tasks", updatedTasks);
+  };
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(job);
 
@@ -282,6 +309,103 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
                   <ExternalLink className="h-4 w-4 text-blue-500" />
                 </a>
               )}
+            </div>
+          </div>
+
+          {/* Recruiter / Contact Section */}
+          <div className="border-t border-border pt-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              {locale === "es" ? "Reclutador / Contacto" : "Recruiter / Contact"}
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className={labelCls}>{locale === "es" ? "Nombre" : "Name"}</label>
+                <input
+                  className={inputCls}
+                  value={form.recruiterName ?? ""}
+                  onChange={(e) => set("recruiterName", e.target.value || null)}
+                  placeholder={locale === "es" ? "Ej. María Gómez" : "e.g. Jane Doe"}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>{locale === "es" ? "Correo electrónico" : "Email"}</label>
+                  <input
+                    className={inputCls}
+                    type="email"
+                    value={form.recruiterEmail ?? ""}
+                    onChange={(e) => set("recruiterEmail", e.target.value || null)}
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>LinkedIn</label>
+                  <input
+                    className={inputCls}
+                    value={form.recruiterLinkedin ?? ""}
+                    onChange={(e) => set("recruiterLinkedin", e.target.value || null)}
+                    placeholder="linkedin.com/in/username"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Subtasks Checklist Section */}
+          <div className="border-t border-border pt-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              {locale === "es" ? "Tareas / Checklist" : "Tasks / Checklist"}
+            </h4>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  className={inputCls}
+                  value={newTaskText}
+                  onChange={(e) => setNewTaskText(e.target.value)}
+                  placeholder={locale === "es" ? "Añadir nueva tarea..." : "Add new task..."}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTask();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={addTask}
+                  className="p-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {(form.tasks ?? []).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between gap-3 p-2 rounded border border-border bg-background/50 hover:bg-accent/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => toggleTask(task.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className={`text-sm truncate ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {task.text}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeTask(task.id)}
+                      className="p-1 text-muted-foreground hover:text-red-500 rounded transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

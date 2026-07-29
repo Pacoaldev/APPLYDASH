@@ -6,9 +6,12 @@ import { logout } from "@/app/(auth)/logout/action";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { useLocale } from "@/components/locale-provider";
+import { Keyboard } from "lucide-react";
+import { ShortcutsModal } from "@/components/shortcuts-modal";
 
 export function NavbarDemo() {
   const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const { t } = useLocale();
   const supabase = createClient();
 
@@ -62,6 +65,13 @@ export function NavbarDemo() {
           <div className="hidden lg:flex items-center gap-4 text-base font-medium">
             <LocaleToggle />
             <ThemeToggle />
+            <button
+              onClick={() => setIsShortcutsOpen(true)}
+              className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title={(t.dashboard as any).shortcutsTitle || "Keyboard Shortcuts"}
+            >
+              <Keyboard className="h-5 w-5" />
+            </button>
             {!user ? (
               <>
                 <a href="/" className="text-muted-foreground hover:text-blue-700 dark:hover:text-blue-400 transition">{t.nav.home}</a>
@@ -72,8 +82,8 @@ export function NavbarDemo() {
               <>
                 <a href="/" className="text-muted-foreground hover:text-blue-700 dark:hover:text-blue-400 transition">{t.nav.home}</a>
                 <span className="text-blue-700 dark:text-blue-400 font-semibold px-3 py-2">{user.email}</span>
-                <a href="/dashboard" className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">{t.nav.dashboard}</a>
-                <button onClick={handleLogout} className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-red-500 to-red-700 shadow hover:scale-105 transition">{t.nav.logout}</button>
+                <a href="/dashboard" className="px-4 py-2 rounded-lg font-semibold text-white bg-linear-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">{t.nav.dashboard}</a>
+                <button onClick={handleLogout} className="px-4 py-2 rounded-lg font-semibold text-white bg-linear-to-r from-red-500 to-red-700 shadow hover:scale-105 transition">{t.nav.logout}</button>
               </>
             )}
           </div>
@@ -82,6 +92,13 @@ export function NavbarDemo() {
         <div className="lg:hidden flex items-center gap-2">
           <LocaleToggle />
           <ThemeToggle />
+          <button
+            onClick={() => setIsShortcutsOpen(true)}
+            className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            title={(t.dashboard as any).shortcutsTitle || "Keyboard Shortcuts"}
+          >
+            <Keyboard className="h-5 w-5" />
+          </button>
           <button className="flex items-center p-2" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Open menu">
             <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-700 dark:text-blue-400">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -100,13 +117,14 @@ export function NavbarDemo() {
           ) : (
             <>
               <span className="text-blue-700 dark:text-blue-400 font-semibold w-full text-center mb-2">{user.email}</span>
-              <a href="/dashboard" className="w-full px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition text-center" onClick={() => setMobileOpen(false)}>{t.nav.dashboard}</a>
-              <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="w-full px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">{t.nav.logout}</button>
+              <a href="/dashboard" className="w-full px-4 py-3 rounded-xl font-bold text-white bg-linear-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition text-center" onClick={() => setMobileOpen(false)}>{t.nav.dashboard}</a>
+              <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="w-full px-4 py-3 rounded-xl font-bold text-white bg-linear-to-r from-blue-500 to-blue-700 shadow hover:scale-105 transition">{t.nav.logout}</button>
             </>
           )}
           <a href="/" className="text-muted-foreground hover:text-blue-700 dark:hover:text-blue-400 transition w-full text-center py-3 rounded-xl" onClick={() => setMobileOpen(false)}>{t.nav.home}</a>
         </div>
       )}
+      <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
     </div>
   );
 }
