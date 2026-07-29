@@ -83,7 +83,13 @@ export async function POST() {
         FOREIGN KEY ("jobid") REFERENCES "jobs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
       EXCEPTION
         WHEN duplicate_object THEN null;
-      END $$;`
+      END $$;`,
+
+      // v3: recruiter fields & tasks JSON
+      `ALTER TABLE "jobs" ADD COLUMN IF NOT EXISTS "recruiter_name" TEXT;`,
+      `ALTER TABLE "jobs" ADD COLUMN IF NOT EXISTS "recruiter_email" TEXT;`,
+      `ALTER TABLE "jobs" ADD COLUMN IF NOT EXISTS "recruiter_linkedin" TEXT;`,
+      `ALTER TABLE "jobs" ADD COLUMN IF NOT EXISTS "tasks" JSONB DEFAULT '[]'::jsonb;`
     ];
     
     for (const migration of migrations) {
