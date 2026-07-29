@@ -156,13 +156,23 @@ function normalizeSalary(raw) {
 function scrapeLinkedIn(base) {
   const position = base.position ||
     text(".job-details-jobs-unified-top-card__job-title h1",
-         ".jobs-unified-top-card__job-title h1", "main h1", "h1");
+         ".jobs-unified-top-card__job-title h1", 
+         "main h1", 
+         "h1",
+         "[class*='job-title']", 
+         "[class*='jobTitle']");
 
   const company = base.company ||
     text(".job-details-jobs-unified-top-card__company-name a",
          ".job-details-jobs-unified-top-card__company-name",
          ".jobs-unified-top-card__company-name a",
-         ".jobs-unified-top-card__company-name") ||
+         ".jobs-unified-top-card__company-name",
+         "[class*='company-name']",
+         "[class*='companyName']",
+         "[class*='company'] a",
+         "[class*='company']",
+         ".topcard__flavor a",
+         ".topcard__flavor") ||
     (() => {
       const og = attr("content", "meta[property='og:title']");
       return og.match(/ at (.+?)( \||$)/)?.[1]?.trim() || "";
@@ -170,17 +180,24 @@ function scrapeLinkedIn(base) {
 
   const typeRaw = base.type ||
     text(".job-details-jobs-unified-top-card__workplace-type",
-         ".jobs-unified-top-card__workplace-type");
+         ".jobs-unified-top-card__workplace-type",
+         "[class*='workplace-type']");
 
   let location = base.location;
   if (!location) {
-    for (const el of document.querySelectorAll(
-      ".job-details-jobs-unified-top-card__primary-description-without-tagline .tvm__text," +
-      ".jobs-unified-top-card__bullet"
-    )) {
-      const t = el.textContent?.trim();
-      if (t && !/remot|h[ií]brid|presencial|on.?site|\d+ candidat/i.test(t) && t.length > 3) {
-        location = t; break;
+    location = text(".job-details-jobs-unified-top-card__primary-description-without-tagline .tvm__text",
+                    ".jobs-unified-top-card__primary-description",
+                    "[class*='location']",
+                    "[class*='localidad']");
+    if (!location) {
+      for (const el of document.querySelectorAll(
+        ".job-details-jobs-unified-top-card__primary-description-without-tagline .tvm__text," +
+        ".jobs-unified-top-card__bullet"
+      )) {
+        const t = el.textContent?.trim();
+        if (t && !/remot|h[ií]brido|presencial|on.?site|\d+ candidat/i.test(t) && t.length > 3) {
+          location = t; break;
+        }
       }
     }
   }
