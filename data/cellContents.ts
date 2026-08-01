@@ -52,6 +52,8 @@ const cellContents = {
     "Technical Round",
     "Final Round",
     "Closed",
+    "Ghosted",
+    "Archived",
   ],
   statusEs: [
     "Aplicado",
@@ -68,6 +70,8 @@ const cellContents = {
     "Prueba técnica",
     "Entrevista final",
     "Oferta cerrada",
+    "Sin respuesta",
+    "Archivado",
   ],
   type: ["Remote", "Office", "Hybrid"],
   typeEs: ["Remoto", "Presencial", "Híbrido"],
