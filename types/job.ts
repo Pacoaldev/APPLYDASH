@@ -39,6 +39,7 @@ export type JobFilter =
   | "thisWeek"
   | "interviewing"
   | "noResponse14"
+  | "noResponse21"
   | "followUpDue"
   | "offers";
 

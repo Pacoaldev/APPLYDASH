@@ -43,6 +43,8 @@ export const STATUS_ES_TO_EN: Record<string, string> = {
   "Prueba técnica": "Technical Round",
   "Entrevista final": "Final Round",
   "Oferta cerrada": "Closed",
+  "Sin respuesta": "Ghosted",
+  "Archivado": "Archived",
 };
 
 const STATUS_EN_TO_ES: Record<string, string> = Object.fromEntries(
@@ -88,6 +90,8 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; shadow: s
   Withdrawn:       { bg: "bg-gray-200 dark:bg-gray-700",           text: "text-gray-600 dark:text-gray-300",       shadow: "shadow-[0_2px_0_0_#9ca3af] dark:shadow-[0_2px_0_0_#374151]" },
   "On Hold":       { bg: "bg-slate-200 dark:bg-slate-700",         text: "text-slate-600 dark:text-slate-300",     shadow: "shadow-[0_2px_0_0_#94a3b8] dark:shadow-[0_2px_0_0_#334155]" },
   Closed:          { bg: "bg-zinc-200 dark:bg-zinc-800",           text: "text-zinc-600 dark:text-zinc-400",       shadow: "shadow-[0_2px_0_0_#d4d4d8] dark:shadow-[0_2px_0_0_#27272a]" },
+  Ghosted:         { bg: "bg-fuchsia-100 dark:bg-fuchsia-950/40",  text: "text-fuchsia-700 dark:text-fuchsia-300", shadow: "shadow-[0_2px_0_0_#e9d5ff] dark:shadow-[0_2px_0_0_#701a75]" },
+  Archived:        { bg: "bg-zinc-100 dark:bg-zinc-800",           text: "text-zinc-500 dark:text-zinc-400",       shadow: "shadow-[0_2px_0_0_#e4e4e7] dark:shadow-[0_2px_0_0_#27272a]" },
 };
 
 export const INTERVIEW_STATUSES = [
@@ -103,6 +107,7 @@ export const KANBAN_COLUMNS = [
   { key: "Interview", statuses: INTERVIEW_STATUSES },
   { key: "Offer", statuses: ["Offer", "Accepted", "Negotiating"] },
   { key: "Rejected", statuses: ["Rejected", "Withdrawn", "On Hold", "Closed"] },
+  { key: "Ghosted", statuses: ["Ghosted", "Archived"] },
 ] as const;
 
 export function getStatusStyle(status: string | null) {
@@ -152,6 +157,12 @@ export function filterJobs(jobs: Job[], filter: JobFilter): Job[] {
         (j) =>
           hasStatus(j.status, ["Applied", "Pending"]) &&
           (daysSince(j.appliedDate) ?? 0) >= 14
+      );
+    case "noResponse21":
+      return jobs.filter(
+        (j) =>
+          hasStatus(j.status, ["Applied", "Pending"]) &&
+          (daysSince(j.appliedDate) ?? 0) >= 21
       );
     case "followUpDue":
       return jobs.filter(isFollowUpDue);

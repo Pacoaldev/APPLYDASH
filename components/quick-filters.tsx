@@ -15,6 +15,7 @@ const FILTERS: JobFilter[] = [
   "thisWeek",
   "interviewing",
   "noResponse14",
+  "noResponse21",
   "followUpDue",
   "offers",
 ];
@@ -27,6 +28,7 @@ export function QuickFilters({ active, onChange, className = "", extra }: Props)
     thisWeek: t.dashboard.filters.thisWeek,
     interviewing: t.dashboard.filters.interviewing,
     noResponse14: t.dashboard.filters.noResponse14,
+    noResponse21: t.dashboard.filters.noResponse21,
     followUpDue: t.dashboard.filters.followUpDue,
     offers: t.dashboard.filters.offers,
   };

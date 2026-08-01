@@ -23,6 +23,10 @@ export function JobDashboard({ data }: Props) {
     if (typeof window === "undefined") return false;
     try { return localStorage.getItem("applydash-hide-rejected") === "true"; } catch { return false; }
   });
+  const [hideGhosted, setHideGhosted] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("applydash-hide-ghosted") === "true"; } catch { return false; }
+  });
   const [view, setView] = useState<DashboardView>("table");
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
   const [detailJob, setDetailJob] = useState<Job | null>(null);
@@ -39,15 +43,30 @@ export function JobDashboard({ data }: Props) {
     [jobs]
   );
 
+  const ghostedCount = useMemo(() => 
+    jobs.filter((j) => {
+      const status = canonicalStatus(j.status);
+      return status === "Ghosted" || status === "Archived";
+    }).length,
+    [jobs]
+  );
+
   const filteredJobs = useMemo(() => {
-    const byFilter = filterJobs(jobs, filter);
-    return hideRejected
-      ? byFilter.filter((j) => {
-          const status = canonicalStatus(j.status);
-          return status !== "Rejected" && status !== "Closed";
-        })
-      : byFilter;
-  }, [jobs, filter, hideRejected]);
+    let byFilter = filterJobs(jobs, filter);
+    if (hideRejected) {
+      byFilter = byFilter.filter((j) => {
+        const status = canonicalStatus(j.status);
+        return status !== "Rejected" && status !== "Closed";
+      });
+    }
+    if (hideGhosted) {
+      byFilter = byFilter.filter((j) => {
+        const status = canonicalStatus(j.status);
+        return status !== "Ghosted" && status !== "Archived";
+      });
+    }
+    return byFilter;
+  }, [jobs, filter, hideRejected, hideGhosted]);
 
   const handleJobsChange = (updated: Job[]) => {
     const updatedMap = new Map(updated.map((j) => [j.id, j]));
@@ -83,23 +102,42 @@ export function JobDashboard({ data }: Props) {
             onChange={setFilter}
             className="mb-0"
             extra={
-              <button
-                type="button"
-                onClick={() => setHideRejected((v) => {
-                const next = !v;
-                try { localStorage.setItem("applydash-hide-rejected", String(next)); } catch {}
-                return next;
-              })}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
-                  hideRejected
-                    ? "bg-red-600 text-white shadow"
-                    : "bg-muted text-muted-foreground hover:bg-accent"
-                }`}
-              >
-                {hideRejected
-                  ? `${t.dashboard.filters.showRejected}${rejectedCount > 0 ? ` (${rejectedCount})` : ""}`
-                  : t.dashboard.filters.hideRejected}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setHideRejected((v) => {
+                  const next = !v;
+                  try { localStorage.setItem("applydash-hide-rejected", String(next)); } catch {}
+                  return next;
+                })}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                    hideRejected
+                      ? "bg-red-600 text-white shadow"
+                      : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {hideRejected
+                    ? `${t.dashboard.filters.showRejected}${rejectedCount > 0 ? ` (${rejectedCount})` : ""}`
+                    : t.dashboard.filters.hideRejected}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHideGhosted((v) => {
+                  const next = !v;
+                  try { localStorage.setItem("applydash-hide-ghosted", String(next)); } catch {}
+                  return next;
+                })}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                    hideGhosted
+                      ? "bg-fuchsia-700 text-white shadow"
+                      : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {hideGhosted
+                    ? `${t.dashboard.filters.showGhosted}${ghostedCount > 0 ? ` (${ghostedCount})` : ""}`
+                    : t.dashboard.filters.hideGhosted}
+                </button>
+              </div>
             }
           />
           <div className="flex items-center gap-2 shrink-0">

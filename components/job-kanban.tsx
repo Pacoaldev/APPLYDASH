@@ -24,6 +24,7 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
     Interview: t.dashboard.kanbanColumns.interview,
     Offer: t.dashboard.kanbanColumns.offer,
     Rejected: t.dashboard.kanbanColumns.rejected,
+    Ghosted: t.dashboard.kanbanColumns.ghosted,
   };
 
   const statusOptions = locale === "es" ? cellContents.statusEs : cellContents.status;
@@ -51,7 +52,7 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 min-h-[400px]">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 min-h-[400px]">
       {KANBAN_COLUMNS.map((col) => (
         <div
           key={col.key}
