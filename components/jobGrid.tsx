@@ -113,7 +113,7 @@ function StatusCellRenderer(params: ICellRendererParams<Job>) {
     <span
       className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide whitespace-nowrap
         ${style.bg} ${style.text} ${style.shadow}
-        translate-y-0 active:translate-y-[1px] active:shadow-none
+        translate-y-0 active:translate-y-px active:shadow-none
         transition-all duration-75 select-none`}
     >
       {label}
@@ -1118,7 +1118,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         <div
           ref={gridWrapRef}
           title={t.dashboard.resizeHint}
-          className="ag-theme-quartz resize overflow-hidden min-h-[160px] max-h-[92dvh] border border-border rounded-lg"
+          className="ag-theme-quartz resize overflow-hidden min-h-40 max-h-[92dvh] border border-border rounded-lg"
           style={{
             height: gridHeight,
             width: gridWidth === "100%" ? "100%" : gridWidth,
