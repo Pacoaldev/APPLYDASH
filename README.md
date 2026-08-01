@@ -319,6 +319,10 @@ MIT License — see [LICENSE](LICENSE).
 
 ## 📝 Changelog
 
+### August 2026 — UI Layout Fixes
+
+- **Grid column resizing** — Adjusted AG Grid column constraints. Increased the tracking (Seguimiento) column width (`minWidth` to 185, `maxWidth` to 240) to prevent the 5th icon (Archivar) from being cut off. Reduced the notes (Notas) column `flex` factor from 2 to 1 to prevent it from dynamically taking up too much horizontal space.
+
 ### Late July 2026 — Usability & Functionality Enhancements
 
 - **Keyboard shortcuts modal** — Clickable keyboard helper modal added to the navbar (EN/ES) displaying commands (`N`, `S`, `Escape`).

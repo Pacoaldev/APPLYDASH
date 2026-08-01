@@ -300,7 +300,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     } catch {
       // storage blocked — use defaults
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateRows = (next: Job[]) => {
@@ -495,164 +495,164 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       const typeOptions = locale === "es" ? cellContents.typeEs : cellContents.type;
       const statusOptions = locale === "es" ? cellContents.statusEs : cellContents.status;
       return [
-      {
-        headerName: "#",
-        colId: "index",
-        valueGetter: "node.rowIndex + 1",
-        suppressMovable: true,
-        pinned: "left",
-        maxWidth: 40,
-        cellStyle: (p): Record<string, string> => {
-          if (p.data?.id === selectedRowId) {
-            const color = resolvedTheme === "dark" ? "#60A5FA" : "#087AD1";
-            return {
-              boxShadow: `inset 3px 0 0 0 ${color}`,
-            };
-          }
-          return {};
+        {
+          headerName: "#",
+          colId: "index",
+          valueGetter: "node.rowIndex + 1",
+          suppressMovable: true,
+          pinned: "left",
+          maxWidth: 40,
+          cellStyle: (p): Record<string, string> => {
+            if (p.data?.id === selectedRowId) {
+              const color = resolvedTheme === "dark" ? "#60A5FA" : "#087AD1";
+              return {
+                boxShadow: `inset 3px 0 0 0 ${color}`,
+              };
+            }
+            return {};
+          },
         },
-      },
-      {
-        headerName: c.company,
-        field: "company",
-        colId: "company",
-        editable: true,
-        minWidth: 130,
-        tooltipField: "company",
-      },
-      {
-        headerName: c.position,
-        field: "position",
-        colId: "position",
-        editable: true,
-        minWidth: 150,
-        tooltipField: "position",
-      },
-      {
-        headerName: c.type,
-        field: "type",
-        colId: "type",
-        editable: true,
-        minWidth: 110,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: typeOptions },
-        valueGetter: (p) => displayType(p.data?.type ?? null, locale),
-        valueSetter: (p) => {
-          if (!p.data) return false;
-          const canonical = canonicalType(String(p.newValue ?? "")) || String(p.newValue ?? "");
-          if (!canonical) return false;
-          p.data.type = canonical;
-          // Auto-fill location when type is Remote
-          if (canonical === "Remote" && (!p.data.location || p.data.location === "undisclosed")) {
-            p.data.location = locale === "es" ? "Remoto" : "Remote";
-          }
-          return true;
+        {
+          headerName: c.company,
+          field: "company",
+          colId: "company",
+          editable: true,
+          minWidth: 130,
+          tooltipField: "company",
         },
-      },
-      {
-        headerName: c.appliedDate,
-        field: "appliedDate",
-        colId: "appliedDate",
-        editable: true,
-        minWidth: 110,
-        cellEditor: "agDateCellEditor",
-        valueFormatter: (p) => formatDateDDMMYY(p.value),
-        valueParser: (p) => {
-          if (!p.newValue) return null;
-          const d = new Date(p.newValue);
-          return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
+        {
+          headerName: c.position,
+          field: "position",
+          colId: "position",
+          editable: true,
+          minWidth: 150,
+          tooltipField: "position",
         },
-      },
-      { headerName: c.platform, field: "platform", colId: "platform", editable: true, minWidth: 110 },
-      {
-        headerName: c.status,
-        field: "status",
-        colId: "status",
-        editable: true,
-        minWidth: 140,
-        suppressTextOverflow: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: statusOptions },
-        valueGetter: (p) => displayStatus(p.data?.status ?? null, locale),
-        valueSetter: (p) => {
-          if (!p.data) return false;
-          const next = canonicalStatus(String(p.newValue ?? "")) || String(p.newValue ?? "");
-          if (!next) return false;
-          p.data.status = next;
-          return true;
+        {
+          headerName: c.type,
+          field: "type",
+          colId: "type",
+          editable: true,
+          minWidth: 110,
+          cellEditor: "agSelectCellEditor",
+          cellEditorParams: { values: typeOptions },
+          valueGetter: (p) => displayType(p.data?.type ?? null, locale),
+          valueSetter: (p) => {
+            if (!p.data) return false;
+            const canonical = canonicalType(String(p.newValue ?? "")) || String(p.newValue ?? "");
+            if (!canonical) return false;
+            p.data.type = canonical;
+            // Auto-fill location when type is Remote
+            if (canonical === "Remote" && (!p.data.location || p.data.location === "undisclosed")) {
+              p.data.location = locale === "es" ? "Remoto" : "Remote";
+            }
+            return true;
+          },
         },
-        cellRenderer: StatusCellRenderer,
-      },
-      { headerName: c.location, field: "location", colId: "location", editable: true, minWidth: 140, tooltipField: "location" },
-      { headerName: c.salary, field: "salary", colId: "salary", editable: true, minWidth: 130, tooltipField: "salary" },
-      {
-        headerName: t.dashboard.tags,
-        field: "tags",
-        colId: "tags",
-        editable: true,
-        valueGetter: (p) => (p.data?.tags ?? []).join(", "),
-        valueSetter: (p) => {
-          if (p.data) p.data.tags = parseTagsInput(p.newValue ?? "");
-          return true;
+        {
+          headerName: c.appliedDate,
+          field: "appliedDate",
+          colId: "appliedDate",
+          editable: true,
+          minWidth: 110,
+          cellEditor: "agDateCellEditor",
+          valueFormatter: (p) => formatDateDDMMYY(p.value),
+          valueParser: (p) => {
+            if (!p.newValue) return null;
+            const d = new Date(p.newValue);
+            return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
+          },
         },
-      },
-      {
-        headerName: c.tracking,
-        colId: "tracking",
-        minWidth: 185,
-        maxWidth: 240,
-        cellRenderer: TrackingCellRenderer,
-        cellRendererParams: {
-          onToggleTag: handleToggleTag,
+        { headerName: c.platform, field: "platform", colId: "platform", editable: true, minWidth: 110 },
+        {
+          headerName: c.status,
+          field: "status",
+          colId: "status",
+          editable: true,
+          minWidth: 140,
+          suppressTextOverflow: true,
+          cellEditor: "agSelectCellEditor",
+          cellEditorParams: { values: statusOptions },
+          valueGetter: (p) => displayStatus(p.data?.status ?? null, locale),
+          valueSetter: (p) => {
+            if (!p.data) return false;
+            const next = canonicalStatus(String(p.newValue ?? "")) || String(p.newValue ?? "");
+            if (!next) return false;
+            p.data.status = next;
+            return true;
+          },
+          cellRenderer: StatusCellRenderer,
         },
-      },
-      {
-        headerName: t.dashboard.nextFollowUp,
-        field: "nextFollowUpDate",
-        colId: "nextFollowUpDate",
-        editable: true,
-        minWidth: 110,
-        cellEditor: "agDateCellEditor",
-        cellRenderer: FollowUpCellRenderer,
-        valueFormatter: (p) => formatDateDDMMYY(p.value),
-        valueParser: (p) => {
-          if (!p.newValue) return null;
-          const d = new Date(p.newValue);
-          return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
+        { headerName: c.location, field: "location", colId: "location", editable: true, minWidth: 140, tooltipField: "location" },
+        { headerName: c.salary, field: "salary", colId: "salary", editable: true, minWidth: 130, tooltipField: "salary" },
+        {
+          headerName: t.dashboard.tags,
+          field: "tags",
+          colId: "tags",
+          editable: true,
+          valueGetter: (p) => (p.data?.tags ?? []).join(", "),
+          valueSetter: (p) => {
+            if (p.data) p.data.tags = parseTagsInput(p.newValue ?? "");
+            return true;
+          },
         },
-      },
-      { headerName: c.notes, field: "notes", colId: "notes", editable: true, flex: 1, minWidth: 120 },
-      {
-        headerName: locale === "es" ? "Días" : "Days",
-        colId: "daysAgo",
-        editable: false,
-        maxWidth: 70,
-        sortable: true,
-        valueGetter: (p) => {
-          if (!p.data?.appliedDate) return null;
-          const diff = Math.floor((Date.now() - new Date(p.data.appliedDate).getTime()) / 86400000);
-          return diff;
+        {
+          headerName: c.tracking,
+          colId: "tracking",
+          minWidth: 185,
+          maxWidth: 240,
+          cellRenderer: TrackingCellRenderer,
+          cellRendererParams: {
+            onToggleTag: handleToggleTag,
+          },
         },
-        valueFormatter: (p) => p.value != null ? `${p.value}d` : "—",
-        cellStyle: (p): Record<string, string> => {
-          const d = p.value as number;
-          if (d == null) return {};
-          if (d > 21) return { color: "#f87171", fontWeight: "600" };
-          if (d > 14) return { color: "#fb923c" };
-          if (d > 7)  return { color: "#facc15" };
-          return {};
+        {
+          headerName: t.dashboard.nextFollowUp,
+          field: "nextFollowUpDate",
+          colId: "nextFollowUpDate",
+          editable: true,
+          minWidth: 110,
+          cellEditor: "agDateCellEditor",
+          cellRenderer: FollowUpCellRenderer,
+          valueFormatter: (p) => formatDateDDMMYY(p.value),
+          valueParser: (p) => {
+            if (!p.newValue) return null;
+            const d = new Date(p.newValue);
+            return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
+          },
         },
-      },
-      {
-        headerName: c.link,
-        field: "applicationLink",
-        colId: "applicationLink",
-        editable: true,
-        minWidth: 160,
-        cellRenderer: LinkCellRenderer,
-        tooltipField: "applicationLink",
-      },
-    ];
+        { headerName: c.notes, field: "notes", colId: "notes", editable: true, flex: 1, minWidth: 120 },
+        {
+          headerName: locale === "es" ? "Días" : "Days",
+          colId: "daysAgo",
+          editable: false,
+          maxWidth: 70,
+          sortable: true,
+          valueGetter: (p) => {
+            if (!p.data?.appliedDate) return null;
+            const diff = Math.floor((Date.now() - new Date(p.data.appliedDate).getTime()) / 86400000);
+            return diff;
+          },
+          valueFormatter: (p) => p.value != null ? `${p.value}d` : "—",
+          cellStyle: (p): Record<string, string> => {
+            const d = p.value as number;
+            if (d == null) return {};
+            if (d > 21) return { color: "#f87171", fontWeight: "600" };
+            if (d > 14) return { color: "#fb923c" };
+            if (d > 7) return { color: "#facc15" };
+            return {};
+          },
+        },
+        {
+          headerName: c.link,
+          field: "applicationLink",
+          colId: "applicationLink",
+          editable: true,
+          minWidth: 160,
+          cellRenderer: LinkCellRenderer,
+          tooltipField: "applicationLink",
+        },
+      ];
     },
     [t, locale, selectedRowId, resolvedTheme, handleToggleTag]
   );
@@ -892,7 +892,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tempRowId, dirtyRows, showDeleteConfirm]);
 
   const handleExportCSV = () => {
@@ -952,18 +952,18 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       };
 
       const mapped = rows.map((r) => ({
-        company:         r.company || r.Company || r["Empresa"] || null,
-        position:        r.position || r.Position || r["Puesto"] || null,
-        type:            r.type || r.Type || r["Tipo"] || "Remote",
+        company: r.company || r.Company || r["Empresa"] || null,
+        position: r.position || r.Position || r["Puesto"] || null,
+        type: r.type || r.Type || r["Tipo"] || "Remote",
         applicationLink: r.applicationLink || r.Link || r.link || r["Enlace"] || null,
-        status:          r.status || r.Status || r["Estado"] || "Applied",
-        appliedDate:     normalizeDate(r.appliedDate || r["Applied Date"] || r["Fecha aplicación"] || r["Fecha aplicacion"] || null),
-        location:        r.location || r.Location || r["Ubicación"] || r["Ubicacion"] || null,
-        platform:        r.platform || r.Platform || r["Plataforma"] || null,
-        salary:          r.salary || r.Salary || r["Salario"] || null,
-        notes:           r.notes || r.Notes || r["Notas"] || null,
-        nextFollowUpDate:normalizeDate(r.nextFollowUpDate || r["Next follow-up"] || r["Próximo seguimiento"] || r["Proximo seguimiento"] || null),
-        tags:            r.tags || r.Tags || r["Etiquetas"] || "",
+        status: r.status || r.Status || r["Estado"] || "Applied",
+        appliedDate: normalizeDate(r.appliedDate || r["Applied Date"] || r["Fecha aplicación"] || r["Fecha aplicacion"] || null),
+        location: r.location || r.Location || r["Ubicación"] || r["Ubicacion"] || null,
+        platform: r.platform || r.Platform || r["Plataforma"] || null,
+        salary: r.salary || r.Salary || r["Salario"] || null,
+        notes: r.notes || r.Notes || r["Notas"] || null,
+        nextFollowUpDate: normalizeDate(r.nextFollowUpDate || r["Next follow-up"] || r["Próximo seguimiento"] || r["Proximo seguimiento"] || null),
+        tags: r.tags || r.Tags || r["Etiquetas"] || "",
       }));
       if (mapped.length === 0) {
         toast.error(t.dashboard.importError, {
@@ -1127,30 +1127,30 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
           }}
         >
           <div className="w-full h-full">
-          <AgGridReact
-            ref={gridRef}
-            rowData={rowData}
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            animateRows
-            pagination
-            theme={gridTheme}
-            localeText={localeText}
-            stopEditingWhenCellsLoseFocus
-            getRowId={(p) => p.data.id}
-            getRowClass={(p) => dirtyRows.has(p.data?.id ?? "") ? "ag-row-dirty" : ""}
-            onCellValueChanged={onCellValueChanged}
-            onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
-            onRowDoubleClicked={(e) => { if (e.data) onRowDoubleClick?.(e.data); }}
-            onGridReady={onGridReady}
-            onFirstDataRendered={onFirstDataRendered}
-            onColumnMoved={onColumnStateChanged}
-            onColumnResized={onColumnStateChanged}
-            onColumnVisible={onColumnStateChanged}
-            domLayout="normal"
-            enableBrowserTooltips
-            tooltipShowDelay={400}
-          />
+            <AgGridReact
+              ref={gridRef}
+              rowData={rowData}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              animateRows
+              pagination
+              theme={gridTheme}
+              localeText={localeText}
+              stopEditingWhenCellsLoseFocus
+              getRowId={(p) => p.data.id}
+              getRowClass={(p) => dirtyRows.has(p.data?.id ?? "") ? "ag-row-dirty" : ""}
+              onCellValueChanged={onCellValueChanged}
+              onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
+              onRowDoubleClicked={(e) => { if (e.data) onRowDoubleClick?.(e.data); }}
+              onGridReady={onGridReady}
+              onFirstDataRendered={onFirstDataRendered}
+              onColumnMoved={onColumnStateChanged}
+              onColumnResized={onColumnStateChanged}
+              onColumnVisible={onColumnStateChanged}
+              domLayout="normal"
+              enableBrowserTooltips
+              tooltipShowDelay={400}
+            />
           </div>
         </div>
       </div>
@@ -1214,11 +1214,10 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
               <div
                 key={job.id}
                 onClick={() => setSelectedRowId(job.id)}
-                className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
-                  isSelected
+                className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer ${isSelected
                     ? "border-blue-500 bg-slate-900 shadow-lg shadow-blue-500/10"
                     : "border-border/60 bg-slate-900/40 hover:bg-slate-900/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
