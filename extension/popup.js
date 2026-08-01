@@ -109,6 +109,7 @@ document.getElementById("save").addEventListener("click", async () => {
     appliedDate:     new Date().toISOString().split("T")[0],
     recruiterName:   scraped.recruiterName || null,
     recruiterLinkedin: scraped.recruiterLinkedin || null,
+    tags:            document.getElementById("hasCoverLetter").checked ? ["Carta Presentación"] : [],
   };
 
   try {

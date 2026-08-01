@@ -26,6 +26,9 @@
     button#save:disabled { opacity: 0.5; cursor: not-allowed; }
     #statusMsg { font-size: 12px; margin-top: 7px; text-align: center; min-height: 16px; }
     .divider { border: none; border-top: 1px solid #1e293b; margin: 8px 0; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; cursor: pointer; }
+    .checkbox-row input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
+    .checkbox-row span { font-size: 13px; color: #e2e8f0; }
   </style>
 </head>
 <body>
@@ -76,6 +79,11 @@
 
   <label>Notes</label>
   <input id="notes" placeholder="Quick note about this job…" />
+
+  <label class="checkbox-row">
+    <input id="hasCoverLetter" type="checkbox" />
+    <span>Carta de Presentación</span>
+  </label>
 
   <button id="save">Save to ApplyDash</button>
   <p id="statusMsg"></p>
