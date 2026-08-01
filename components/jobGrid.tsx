@@ -37,6 +37,7 @@ import {
   Mail,
   Lock,
   Eye,
+  Archive,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -156,6 +157,7 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
   const hasSeen = tags.includes("Solicitud Vista");
   const hasMail = tags.includes("Carta Presentación");
   const hasClosed = tags.includes("Cerrada");
+  const hasArchived = tags.includes("Archivado") || tags.includes("Archived");
 
   if (!params.data) return null;
 
@@ -188,6 +190,13 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
         className={`p-1 rounded transition-colors ${hasClosed ? "text-red-500 bg-red-500/10 hover:bg-red-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
       >
         <Lock className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => params.onToggleTag(params.data!, "Archivado")}
+        title="Archivar"
+        className={`p-1 rounded transition-colors ${hasArchived ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+      >
+        <Archive className="h-4 w-4" />
       </button>
     </div>
   );
@@ -438,9 +447,20 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     async (job: Job, tag: string) => {
       if (job.id.toString().startsWith("temp_")) return;
       const isPresent = job.tags.includes(tag);
-      const nextTags = isPresent
-        ? job.tags.filter((t) => t !== tag)
-        : [...job.tags, tag];
+      let nextTags = [...job.tags];
+      if (tag === "Archivado") {
+        const hasSp = job.tags.includes("Archivado");
+        const hasEn = job.tags.includes("Archived");
+        if (hasSp || hasEn) {
+          nextTags = nextTags.filter((t) => t !== "Archivado" && t !== "Archived");
+        } else {
+          nextTags.push("Archivado");
+        }
+      } else {
+        nextTags = isPresent
+          ? job.tags.filter((t) => t !== tag)
+          : [...job.tags, tag];
+      }
 
       const updatedJob = { ...job, tags: nextTags };
 

@@ -5,7 +5,7 @@ import { Job } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
-import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2 } from "lucide-react";
+import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2, Archive } from "lucide-react";
 import { displayStatus, displayType, canonicalStatus, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
@@ -272,6 +272,26 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
               >
                 <Lock className="h-4 w-4" />
                 {locale === "es" ? "Cerrada" : "Closed"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTags = form.tags ?? [];
+                  const hasArchived = currentTags.includes("Archivado") || currentTags.includes("Archived");
+                  const nextTags = hasArchived
+                    ? currentTags.filter((t) => t !== "Archivado" && t !== "Archived")
+                    : [...currentTags, "Archivado"];
+                  set("tags", nextTags);
+                }}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                  (form.tags ?? []).includes("Archivado") || (form.tags ?? []).includes("Archived")
+                    ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <Archive className="h-4 w-4" />
+                {locale === "es" ? "Archivada" : "Archived"}
               </button>
             </div>
           </div>
