@@ -599,8 +599,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
       {
         headerName: c.tracking,
         colId: "tracking",
-        minWidth: 155,
-        maxWidth: 175,
+        minWidth: 185,
+        maxWidth: 240,
         cellRenderer: TrackingCellRenderer,
         cellRendererParams: {
           onToggleTag: handleToggleTag,
@@ -621,7 +621,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
           return isNaN(d.getTime()) ? null : d.toISOString().split("T")[0];
         },
       },
-      { headerName: c.notes, field: "notes", colId: "notes", editable: true, flex: 2, minWidth: 120 },
+      { headerName: c.notes, field: "notes", colId: "notes", editable: true, flex: 1, minWidth: 120 },
       {
         headerName: locale === "es" ? "Días" : "Days",
         colId: "daysAgo",
