@@ -601,6 +601,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
           colId: "tracking",
           minWidth: 185,
           maxWidth: 240,
+          // So CSV export includes archive/tracking tags (Archivado, CV Visto, …).
+          valueGetter: (p) => (p.data?.tags ?? []).join(", "),
           cellRenderer: TrackingCellRenderer,
           cellRendererParams: {
             onToggleTag: handleToggleTag,
@@ -901,7 +903,34 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     const csvContent = api?.getDataAsCsv({
       suppressQuotes: false,
       onlySelected: false,
-      // exportedRows: "filteredAndSorted" is the default — exports visible rows only
+      // Distinguish tracking-tags from "Días" (days since applied).
+      processHeaderCallback: (params) => {
+        const colId = params.column.getColId();
+        if (colId === "tracking") return locale === "es" ? "Etiquetas" : "Tags";
+        if (colId === "daysAgo") return locale === "es" ? "Días" : "Days";
+        if (colId === "nextFollowUpDate") {
+          return locale === "es" ? "Próximo seguimiento" : "Next follow-up";
+        }
+        return params.column.getColDef().headerName ?? colId;
+      },
+      processCellCallback: (params) => {
+        const colId = params.column.getColId();
+        const data = params.node?.data as Job | undefined;
+        if (colId === "tracking") {
+          return (data?.tags ?? []).join(", ");
+        }
+        if (colId === "daysAgo") {
+          if (!data?.appliedDate) return "";
+          const diff = Math.floor(
+            (Date.now() - new Date(data.appliedDate).getTime()) / 86400000
+          );
+          return Number.isFinite(diff) ? String(diff) : "";
+        }
+        if (colId === "tags") {
+          return (data?.tags ?? []).join(", ");
+        }
+        return params.value ?? "";
+      },
     }) ?? "";
     const bom = "\uFEFF";
     const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
