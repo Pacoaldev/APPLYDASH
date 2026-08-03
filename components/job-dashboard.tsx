@@ -11,12 +11,13 @@ import { JobDetailPanel } from "@/components/job-detail-panel";
 import JobGrid from "@/components/jobGrid";
 import { JobKanban } from "@/components/job-kanban";
 import { useLocale } from "@/components/locale-provider";
-import { LayoutGrid, Table2 } from "lucide-react";
+import { LayoutGrid, Table2, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard-header";
 
 type Props = { data: Job[] };
 
 export function JobDashboard({ data }: Props) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [jobs, setJobs] = useState<Job[]>(data);
   const [filter, setFilter] = useState<JobFilter>("all");
   const [hideRejected, setHideRejected] = useState<boolean>(() => {
@@ -30,6 +31,10 @@ export function JobDashboard({ data }: Props) {
   const [view, setView] = useState<DashboardView>("table");
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
   const [detailJob, setDetailJob] = useState<Job | null>(null);
+  const [showStats, setShowStats] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("applydash-show-stats") === "true"; } catch { return false; }
+  });
 
   useEffect(() => {
     setJobs(data);
@@ -94,8 +99,33 @@ export function JobDashboard({ data }: Props) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
-      <DashboardStats jobs={jobs} />
-      <ActivityChart jobs={jobs} />
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <DashboardHeader />
+        <button
+          type="button"
+          onClick={() => setShowStats((prev) => {
+            const next = !prev;
+            try { localStorage.setItem("applydash-show-stats", String(next)); } catch {}
+            return next;
+          })}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border bg-card hover:bg-accent text-muted-foreground hover:text-foreground transition-all duration-200 shadow-xs"
+        >
+          <BarChart3 className="h-3.5 w-3.5 text-blue-500" />
+          <span>
+            {showStats
+              ? (locale === "es" ? "Ocultar estadísticas" : "Hide statistics")
+              : (locale === "es" ? "Mostrar estadísticas" : "Show statistics")}
+          </span>
+          {showStats ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+
+      {showStats && (
+        <div className="transition-all duration-300 ease-in-out">
+          <DashboardStats jobs={jobs} />
+          <ActivityChart jobs={jobs} />
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <QuickFilters

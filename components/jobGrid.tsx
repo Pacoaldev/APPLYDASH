@@ -65,18 +65,18 @@ const lightGridTheme = themeQuartz.withParams({
   accentColor: "#087AD1",
   backgroundColor: "#FFFFFF",
   borderColor: "#D7E2E6",
-  borderRadius: 2,
+  borderRadius: 4,
   browserColorScheme: "light",
   cellHorizontalPaddingScale: 1,
   chromeBackgroundColor: { ref: "backgroundColor" },
   columnBorder: true,
-  fontSize: 13,
-  foregroundColor: "#555B62",
-  headerBackgroundColor: "#FFFFFF",
-  headerFontWeight: 400,
-  headerTextColor: "#84868B",
+  fontSize: 13.5,
+  foregroundColor: "#1F2937",
+  headerBackgroundColor: "#F3F4F6",
+  headerFontWeight: 600,
+  headerTextColor: "#374151",
   rowBorder: true,
-  rowVerticalPaddingScale: 0.8,
+  rowVerticalPaddingScale: 0.9,
   sidePanelBorder: true,
   spacing: 6,
   wrapperBorder: true,
@@ -85,20 +85,20 @@ const lightGridTheme = themeQuartz.withParams({
 
 const darkGridTheme = themeQuartz.withParams({
   accentColor: "#60A5FA",
-  backgroundColor: "#1e293b",
-  borderColor: "#334155",
-  borderRadius: 2,
+  backgroundColor: "#0f172a",
+  borderColor: "#1e293b",
+  borderRadius: 4,
   browserColorScheme: "dark",
   cellHorizontalPaddingScale: 1,
   chromeBackgroundColor: { ref: "backgroundColor" },
   columnBorder: true,
-  fontSize: 13,
+  fontSize: 13.5,
   foregroundColor: "#cbd5e1",
-  headerBackgroundColor: "#0f172a",
-  headerFontWeight: 400,
-  headerTextColor: "#94a3b8",
+  headerBackgroundColor: "#1e293b",
+  headerFontWeight: 600,
+  headerTextColor: "#f1f5f9",
   rowBorder: true,
-  rowVerticalPaddingScale: 0.8,
+  rowVerticalPaddingScale: 0.9,
   sidePanelBorder: true,
   spacing: 6,
   wrapperBorder: true,
@@ -222,14 +222,14 @@ function getInitialGridWidth(): number | "100%" {
 }
 
 function getInitialGridHeight(rowCount: number): number {
-  if (typeof window === "undefined") return 280;
+  if (typeof window === "undefined") return 400;
   try {
     const stored = localStorage.getItem(GRID_HEIGHT_KEY);
     if (stored) return Math.max(GRID_MIN_H, Number(stored));
   } catch {
     // ponytail: storage blocked
   }
-  return Math.min(480, Math.max(200, 100 + rowCount * 42 + 56));
+  return Math.min(720, Math.max(400, 100 + rowCount * 42 + 56));
 }
 
 function parseCsvLine(line: string, sep: string): string[] {
@@ -294,7 +294,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
   useEffect(() => {
     try {
       const storedH = localStorage.getItem(GRID_HEIGHT_KEY);
-      setGridHeight(storedH ? Math.max(GRID_MIN_H, Number(storedH)) : Math.min(480, Math.max(200, 100 + data.length * 42 + 56)));
+      setGridHeight(storedH ? Math.max(GRID_MIN_H, Number(storedH)) : Math.min(720, Math.max(400, 100 + data.length * 42 + 56)));
       const storedW = localStorage.getItem(GRID_WIDTH_KEY);
       setGridWidth(storedW ? Math.max(GRID_MIN_W, Number(storedW)) : "100%");
     } catch {
