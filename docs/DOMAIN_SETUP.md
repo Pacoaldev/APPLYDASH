@@ -29,7 +29,7 @@ Si ya tienes tu portfolio en `pacoal.dev`, puedes configurar un proxy reverso:
 #### En tu servidor web (Nginx ejemplo):
 ```nginx
 location /applydash {
-    proxy_pass https://applydash-wyxf4.ondigitalocean.app;
+    proxy_pass https://your-app-name.ondigitalocean.app;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -39,8 +39,8 @@ location /applydash {
 
 #### En Apache:
 ```apache
-ProxyPass /applydash https://applydash-wyxf4.ondigitalocean.app/
-ProxyPassReverse /applydash https://applydash-wyxf4.ondigitalocean.app/
+ProxyPass /applydash https://your-app-name.ondigitalocean.app/
+ProxyPassReverse /applydash https://your-app-name.ondigitalocean.app/
 ```
 
 ### Variables de Entorno a Actualizar:

@@ -41,11 +41,10 @@ export function getClientConfigSync(): ClientConfig {
     };
   }
   
-  // Fallback to hardcoded values (temporary fix)
-  console.warn('🚨 Using fallback Supabase configuration');
+  // Fallback (forces variables check)
   return {
-    supabaseUrl: 'https://yozhtdvvtpoutamfzmsj.supabase.co',
-    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlvemh0ZHZ2dHBvdXRhbWZ6bXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNDMzODksImV4cCI6MjA3MTcxOTM4OX0.QD0KzqEoLeRfUhPWMHcKCs6r5gvpGnoXm1-rCnZ-IqM',
+    supabaseUrl: '',
+    supabaseAnonKey: '',
     siteUrl: 'https://applydash.pacoal.dev',
   };
 }
