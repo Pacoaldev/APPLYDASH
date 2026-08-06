@@ -5,7 +5,7 @@ import { Job } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
-import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2, Archive } from "lucide-react";
+import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2, Archive, ShieldAlert } from "lucide-react";
 import { displayStatus, displayType, canonicalStatus, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
@@ -292,6 +292,25 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
               >
                 <Archive className="h-4 w-4" />
                 {locale === "es" ? "Archivada" : "Archived"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const currentTags = form.tags ?? [];
+                  const nextTags = currentTags.includes("Fake")
+                    ? currentTags.filter((t) => t !== "Fake")
+                    : [...currentTags, "Fake"];
+                  set("tags", nextTags);
+                }}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                  (form.tags ?? []).includes("Fake")
+                    ? "border-orange-500/30 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <ShieldAlert className="h-4 w-4" />
+                {locale === "es" ? "Posible FAKE" : "Potential FAKE"}
               </button>
             </div>
           </div>
