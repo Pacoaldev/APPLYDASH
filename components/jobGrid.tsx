@@ -38,6 +38,7 @@ import {
   Lock,
   Eye,
   Archive,
+  Star,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -48,6 +49,7 @@ import cellContents from "@/data/cellContents";
 
 const GRID_HEIGHT_KEY = "applydash-grid-height";
 const GRID_WIDTH_KEY = "applydash-grid-width";
+const HIGHLIGHTED_IDS_KEY = "applydash-highlighted-ids";
 const GRID_MIN_H = 160;
 const GRID_MIN_W = 600;
 
@@ -148,6 +150,29 @@ function FollowUpCellRenderer(params: ICellRendererParams<Job>) {
       {due && <Bell className="h-3 w-3" />}
       {display || "—"}
     </span>
+  );
+}
+
+function HighlightCellRenderer(
+  params: ICellRendererParams<Job> & { onToggleHighlight: (id: string) => void; highlightedIds: Set<string> }
+) {
+  const id = params.data?.id;
+  if (!id) return null;
+  const isHighlighted = params.highlightedIds.has(id);
+  return (
+    <div className="flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => params.onToggleHighlight(id)}
+        title={isHighlighted ? "Quitar resaltado" : "Resaltar oferta"}
+        className={`p-0.5 rounded transition-colors ${
+          isHighlighted
+            ? "text-yellow-400 hover:text-yellow-500"
+            : "text-muted-foreground/25 hover:text-yellow-400/70"
+        }`}
+      >
+        <Star className={`h-3.5 w-3.5 ${isHighlighted ? "fill-yellow-400" : ""}`} />
+      </button>
+    </div>
   );
 }
 
@@ -367,7 +392,41 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     daysAgo: true,
     applicationLink: true,
     tracking: true,
+    highlight: true,
   });
+
+  // Highlighted rows — persisted in localStorage, never sent to server
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem(HIGHLIGHTED_IDS_KEY);
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
+
+  const toggleHighlight = useCallback((id: string) => {
+    setHighlightedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      try {
+        localStorage.setItem(HIGHLIGHTED_IDS_KEY, JSON.stringify(Array.from(next)));
+      } catch {
+        // storage blocked
+      }
+      return next;
+    });
+  }, []);
+
+  // Re-draw rows whenever highlighted set changes so getRowStyle re-evaluates
+  useEffect(() => {
+    gridRef.current?.api?.redrawRows();
+  }, [highlightedIds]);
 
   const toggleableColumns = useMemo(() => [
     { id: "company", label: t.dashboard.columns.company },
@@ -378,6 +437,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
     { id: "status", label: t.dashboard.columns.status },
     { id: "location", label: t.dashboard.columns.location },
     { id: "salary", label: t.dashboard.columns.salary },
+    { id: "highlight", label: locale === "es" ? "⭐ Resaltar" : "⭐ Highlight" },
     { id: "tags", label: t.dashboard.tags },
     { id: "nextFollowUpDate", label: t.dashboard.nextFollowUp },
     { id: "notes", label: t.dashboard.columns.notes },
@@ -510,6 +570,24 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
               };
             }
             return {};
+          },
+        },
+        {
+          headerName: "",
+          colId: "highlight",
+          suppressMovable: true,
+          pinned: "left",
+          width: 32,
+          maxWidth: 32,
+          minWidth: 32,
+          sortable: false,
+          filter: false,
+          resizable: false,
+          suppressHeaderMenuButton: true,
+          cellRenderer: HighlightCellRenderer,
+          cellRendererParams: {
+            onToggleHighlight: toggleHighlight,
+            highlightedIds,
           },
         },
         {
@@ -656,7 +734,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         },
       ];
     },
-    [t, locale, selectedRowId, resolvedTheme, handleToggleTag]
+    [t, locale, selectedRowId, resolvedTheme, handleToggleTag, highlightedIds, toggleHighlight]
   );
 
   const defaultColDef = useMemo<ColDef<Job>>(
@@ -1168,6 +1246,14 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
               stopEditingWhenCellsLoseFocus
               getRowId={(p) => p.data.id}
               getRowClass={(p) => dirtyRows.has(p.data?.id ?? "") ? "ag-row-dirty" : ""}
+              getRowStyle={(p) => {
+                if (p.data?.id && highlightedIds.has(p.data.id)) {
+                  return resolvedTheme === "dark"
+                    ? { backgroundColor: "rgba(234, 179, 8, 0.10)", borderColor: "rgba(234, 179, 8, 0.20)" }
+                    : { backgroundColor: "rgba(254, 249, 195, 0.85)", borderColor: "rgba(234, 179, 8, 0.25)" };
+                }
+                return undefined;
+              }}
               onCellValueChanged={onCellValueChanged}
               onRowClicked={(e: RowClickedEvent<Job>) => setSelectedRowId(e.data?.id ?? null)}
               onRowDoubleClicked={(e) => { if (e.data) onRowDoubleClick?.(e.data); }}
@@ -1245,6 +1331,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
                 onClick={() => setSelectedRowId(job.id)}
                 className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer ${isSelected
                     ? "border-blue-500 bg-slate-900 shadow-lg shadow-blue-500/10"
+                    : highlightedIds.has(job.id)
+                    ? "border-yellow-400/40 bg-yellow-400/8 hover:bg-yellow-400/12"
                     : "border-border/60 bg-slate-900/40 hover:bg-slate-900/60"
                   }`}
               >
@@ -1257,11 +1345,24 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
                       {job.company || "—"}
                     </p>
                   </div>
-                  <span
-                    className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${style.bg} ${style.text}`}
-                  >
-                    {displayStatus(job.status, locale)}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleHighlight(job.id); }}
+                      title={highlightedIds.has(job.id) ? "Quitar resaltado" : "Resaltar oferta"}
+                      className={`p-1 rounded transition-colors ${
+                        highlightedIds.has(job.id)
+                          ? "text-yellow-400"
+                          : "text-slate-600 hover:text-yellow-400/70"
+                      }`}
+                    >
+                      <Star className={`h-3.5 w-3.5 ${highlightedIds.has(job.id) ? "fill-yellow-400" : ""}`} />
+                    </button>
+                    <span
+                      className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${style.bg} ${style.text}`}
+                    >
+                      {displayStatus(job.status, locale)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-400 mt-3 pt-3 border-t border-slate-800/60">
