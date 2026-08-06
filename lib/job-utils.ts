@@ -179,7 +179,12 @@ export function computeStats(jobs: Job[]) {
   const offers = jobs.filter((j) => hasStatus(j.status, ["Offer", "Accepted", "Negotiating"])).length;
   const rejected = jobs.filter((j) => {
     const status = canonicalStatus(j.status);
-    return status === "Rejected" || status === "Closed";
+    return (
+      status === "Rejected" ||
+      status === "Closed" ||
+      status === "Archived" ||
+      (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")))
+    );
   }).length;
   const responded = jobs.filter(
     (j) => j.status && !hasStatus(j.status, ["Applied", "Pending"])
