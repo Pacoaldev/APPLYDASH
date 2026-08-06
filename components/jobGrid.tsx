@@ -39,6 +39,7 @@ import {
   Eye,
   Archive,
   Star,
+  ShieldAlert,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -183,6 +184,7 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
   const hasMail = tags.includes("Carta Presentación");
   const hasClosed = tags.includes("Cerrada");
   const hasArchived = tags.includes("Archivado") || tags.includes("Archived");
+  const hasFake = tags.includes("Fake");
 
   if (!params.data) return null;
 
@@ -222,6 +224,13 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
         className={`p-1 rounded transition-colors ${hasArchived ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
       >
         <Archive className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => params.onToggleTag(params.data!, "Fake")}
+        title="Posible FAKE"
+        className={`p-1 rounded transition-colors ${hasFake ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20" : "text-muted-foreground/30 hover:text-orange-500 hover:bg-muted"}`}
+      >
+        <ShieldAlert className="h-4 w-4" />
       </button>
     </div>
   );
@@ -677,8 +686,8 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         {
           headerName: c.tracking,
           colId: "tracking",
-          minWidth: 185,
-          maxWidth: 240,
+          minWidth: 220,
+          maxWidth: 280,
           // So CSV export includes archive/tracking tags (Archivado, CV Visto, …).
           valueGetter: (p) => (p.data?.tags ?? []).join(", "),
           cellRenderer: TrackingCellRenderer,
