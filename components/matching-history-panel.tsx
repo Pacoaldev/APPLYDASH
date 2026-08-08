@@ -40,6 +40,7 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
 
       const isValidUrl = url && url.trim().length > 10 && (url.includes("http") || url.includes("infojobs") || url.includes("linkedin"));
 
+      console.log("[Matching Debug Panel] Local History records count:", localHistory.length);
       if (isValidUrl && localHistory.length > 0) {
         const cleanUrl = url.trim().toLowerCase();
         matches = localHistory.filter((item: any) => {
@@ -49,25 +50,32 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
           const cleanTargetUrl = cleanUrl.split("?")[0];
           return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
         });
+        console.log("[Matching Debug Panel] URL filter match count:", matches.length);
       }
 
       if (matches.length === 0 && company && localHistory.length > 0) {
         const normTargetCompany = normalizeText(company);
+        console.log("[Matching Debug Panel] Normalized Target Company:", normTargetCompany);
         if (normTargetCompany) {
           matches = localHistory.filter((item: any) => {
             const itemCompany = item.brief?.company || "";
             const normItemCompany = normalizeText(itemCompany);
+            console.log(`[Matching Debug Panel] Comparing itemCompany "${itemCompany}" (norm: "${normItemCompany}") with "${normTargetCompany}"`);
             return normItemCompany && (normItemCompany.includes(normTargetCompany) || normTargetCompany.includes(normItemCompany));
           });
         }
+        console.log("[Matching Debug Panel] Company filter match count:", matches.length);
       }
 
       if (matches.length > 0) {
+        console.log("[Matching Debug Panel] Using matches from IndexedDB:", matches);
         setMatchingData(matches);
         setLoading(false);
       } else {
         // Fallback to Server Action if not found locally in IndexedDB
+        console.log("[Matching Debug Panel] Falling back to server getMatchingHistory with:", { applicationLink, company });
         getMatchingHistory(applicationLink, company).then((result) => {
+          console.log("[Matching Debug Panel] Server fallback result:", result);
           if (result.success && result.data) {
             setMatchingData(result.data);
           } else {
@@ -92,6 +100,7 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
   if (!jobId) return null;
 
   const currentMatch = matchingData[0]; // Take the first match if multiple exist
+  console.log("[Matching Debug Panel] Current Match selected:", currentMatch);
 
   const renderStars = (score: number) => {
     return (
