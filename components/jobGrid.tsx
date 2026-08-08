@@ -48,6 +48,7 @@ import { useLocale } from "@/components/locale-provider";
 import { getAgGridLocale } from "@/lib/ag-grid-locale";
 import { getStatusStyle, isFollowUpDue, parseTagsInput, formatDateDDMMYY, displayStatus, canonicalStatus, displayType, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
+import { saveMatchingHistory } from "@/utils/indexedDB";
 
 const GRID_HEIGHT_KEY = "applydash-grid-height";
 const GRID_WIDTH_KEY = "applydash-grid-width";
@@ -397,7 +398,9 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isImportingMatching, setIsImportingMatching] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const matchingFileInputRef = useRef<HTMLInputElement>(null);
 
   // Column Visibility & Drag state
   const [showColMenu, setShowColMenu] = useState(false);
@@ -1124,6 +1127,36 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
     }
   };
 
+  const handleImportMatchingJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImportingMatching(true);
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      if (!Array.isArray(parsed)) {
+        throw new Error(locale === "es" ? "El archivo JSON debe ser una lista de ofertas." : "The JSON file must be an array of jobs.");
+      }
+
+      await saveMatchingHistory(parsed);
+      toast.success(
+        locale === "es"
+          ? `Historial de matching importado en tu navegador (${parsed.length} registros).`
+          : `Matching history imported in your browser (${parsed.length} records).`
+      );
+    } catch (error) {
+      toast.error(
+        locale === "es" ? "Error al importar el JSON" : "Failed to import JSON",
+        { description: error instanceof Error ? error.message : undefined }
+      );
+    } finally {
+      setIsImportingMatching(false);
+      if (matchingFileInputRef.current) matchingFileInputRef.current.value = "";
+    }
+  };
+
   const selectedJob = rowData.find((j) => j.id === selectedRowId);
 
   return (
@@ -1245,6 +1278,16 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
           {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
         </Button>
         <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
+        <Button
+          onClick={() => matchingFileInputRef.current?.click()}
+          variant="ghost"
+          className="w-fit text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+          disabled={isImportingMatching}
+          title={locale === "es" ? "Importar JSON de Matching" : "Import Matching JSON"}
+        >
+          {isImportingMatching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+        </Button>
+        <input ref={matchingFileInputRef} type="file" accept=".json" className="hidden" onChange={handleImportMatchingJSON} />
       </div>
 
       <div className="hidden md:block w-full overflow-x-auto touch-pan-y">
