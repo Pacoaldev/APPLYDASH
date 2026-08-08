@@ -1146,6 +1146,10 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
           ? `Historial de matching importado en tu navegador (${parsed.length} registros).`
           : `Matching history imported in your browser (${parsed.length} records).`
       );
+      // Force reload to refresh matching panel state and reload database cache
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast.error(
         locale === "es" ? "Error al importar el JSON" : "Failed to import JSON",
