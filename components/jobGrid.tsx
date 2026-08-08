@@ -228,7 +228,7 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
       <button
         onClick={() => params.onToggleTag(params.data!, "Fake")}
         title="Posible FAKE"
-        className={`p-1 rounded transition-colors ${hasFake ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20" : "text-muted-foreground/30 hover:text-orange-500 hover:bg-muted"}`}
+        className={`p-1 rounded transition-colors ${hasFake ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20" : "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"}`}
       >
         <ShieldAlert className="h-4 w-4" />
       </button>
