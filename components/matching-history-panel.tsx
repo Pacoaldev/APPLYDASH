@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getMatchingHistory } from "@/app/dashboard/actions";
 import { useLocale } from "@/components/locale-provider";
 import { Loader2, X, Star, AlertTriangle, CheckCircle, HelpCircle, AlertOctagon, ExternalLink, ShieldCheck, FileText, MessageSquare, Award } from "lucide-react";
+import { getAllMatchingHistory } from "@/utils/indexedDB";
 
 type Props = {
   jobId: string | null;
@@ -11,6 +12,16 @@ type Props = {
   applicationLink: string | null;
   onClose: () => void;
 };
+
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents/diacritics
+    .replace(/\b(sl|s\.l\.|sa|s\.a\.|slu|s\.l\.u\.|consulting|grupo|spain|espana|s\.a\.u\.|sau)\b/gi, "") // remove common suffixes
+    .replace(/[^a-z0-9]/gi, "") // remove non-alphanumeric characters
+    .trim();
+}
 
 export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose }: Props) {
   const { locale } = useLocale();
@@ -21,13 +32,60 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
   useEffect(() => {
     if (!jobId) return;
     setLoading(true);
-    getMatchingHistory(applicationLink, company).then((result) => {
-      if (result.success && result.data) {
-        setMatchingData(result.data);
-      } else {
-        setMatchingData([]);
+
+    // Try client-side IndexedDB lookup first
+    getAllMatchingHistory().then((localHistory) => {
+      let matches: any[] = [];
+      const url = applicationLink;
+
+      const isValidUrl = url && url.trim().length > 10 && (url.includes("http") || url.includes("infojobs") || url.includes("linkedin"));
+
+      if (isValidUrl && localHistory.length > 0) {
+        const cleanUrl = url.trim().toLowerCase();
+        matches = localHistory.filter((item: any) => {
+          if (!item.sourceUrl) return false;
+          const itemUrl = item.sourceUrl.trim().toLowerCase();
+          const cleanItemUrl = itemUrl.split("?")[0];
+          const cleanTargetUrl = cleanUrl.split("?")[0];
+          return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
+        });
       }
-      setLoading(false);
+
+      if (matches.length === 0 && company && localHistory.length > 0) {
+        const normTargetCompany = normalizeText(company);
+        if (normTargetCompany) {
+          matches = localHistory.filter((item: any) => {
+            const itemCompany = item.brief?.company || "";
+            const normItemCompany = normalizeText(itemCompany);
+            return normItemCompany && (normItemCompany.includes(normTargetCompany) || normTargetCompany.includes(normItemCompany));
+          });
+        }
+      }
+
+      if (matches.length > 0) {
+        setMatchingData(matches);
+        setLoading(false);
+      } else {
+        // Fallback to Server Action if not found locally in IndexedDB
+        getMatchingHistory(applicationLink, company).then((result) => {
+          if (result.success && result.data) {
+            setMatchingData(result.data);
+          } else {
+            setMatchingData([]);
+          }
+          setLoading(false);
+        });
+      }
+    }).catch((err) => {
+      console.error("Local matching lookup failed, falling back to server:", err);
+      getMatchingHistory(applicationLink, company).then((result) => {
+        if (result.success && result.data) {
+          setMatchingData(result.data);
+        } else {
+          setMatchingData([]);
+        }
+        setLoading(false);
+      });
     });
   }, [jobId, applicationLink, company]);
 
