@@ -306,7 +306,7 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
                 className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
                   (form.tags ?? []).includes("Fake")
                     ? "border-orange-500/30 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20"
-                    : "border-border hover:bg-muted text-muted-foreground"
+                    : "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
                 }`}
               >
                 <ShieldAlert className="h-4 w-4" />
