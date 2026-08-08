@@ -38,7 +38,7 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
       let matches: any[] = [];
       const url = applicationLink;
 
-      const isValidUrl = url && url.trim().length > 10 && (url.includes("http") || url.includes("infojobs") || url.includes("linkedin"));
+      const isValidUrl = url && url.trim().length > 10 && (url.includes("http") || url.includes("infojobs") || url.includes("linkedin") || url.includes("indeed"));
 
       console.log("[Matching Debug Panel] Local History records count:", localHistory.length);
       if (isValidUrl && localHistory.length > 0) {
@@ -54,9 +54,9 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
           const ijMatch = u.match(/(?:id=|_|detail\/)(of-[a-zA-Z0-9]+|\d+)/);
           if (ijMatch) return { type: 'infojobs', id: ijMatch[1] };
 
-          // Indeed: jk=7e93f6fe9b6c30d5 or similar job key
-          const indMatch = u.match(/[?&]jk=([a-zA-Z0-9]+)/) || u.match(/\/viewjob.*jk=([a-zA-Z0-9]+)/);
-          if (indMatch) return { type: 'indeed', id: indMatch[1] };
+          // Indeed: jk=7e93f6fe9b6c30d5 or similar job key (case insensitive in URL regex)
+          const indMatch = u.match(/[?&]jk=([a-f0-9]+)/i) || u.match(/\/viewjob.*jk=([a-f0-9]+)/i);
+          if (indMatch) return { type: 'indeed', id: indMatch[1].toLowerCase() };
           
           return null;
         };
@@ -84,8 +84,17 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
           const cleanItemUrl = itemUrl.split("?")[0].replace(/\/$/, "");
           const cleanTargetUrl = cleanUrl.split("?")[0].replace(/\/$/, "");
           
-          // If the clean path is just the domain (e.g. https://es.indeed.com/viewjob), do not do broad substring matching
-          if (cleanItemUrl.length < 35 || cleanTargetUrl.length < 35 || cleanItemUrl.endsWith("/viewjob") || cleanTargetUrl.endsWith("/viewjob")) return false;
+          // If the clean path is just the domain or Indeed's common paths, do not do broad substring matching
+          if (
+            cleanItemUrl.length < 35 || 
+            cleanTargetUrl.length < 35 || 
+            cleanItemUrl.includes("indeed.com/viewjob") || 
+            cleanTargetUrl.includes("indeed.com/viewjob") ||
+            cleanItemUrl.includes("indeed.com/rc/clk") ||
+            cleanTargetUrl.includes("indeed.com/rc/clk")
+          ) {
+            return false;
+          }
           
           return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
         });
