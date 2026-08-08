@@ -40,6 +40,7 @@ import {
   Archive,
   Star,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 import { GlowingButton } from "./ui/glowing-button";
 import { useTheme } from "@/components/theme-provider";
@@ -177,7 +178,12 @@ function HighlightCellRenderer(
   );
 }
 
-function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: (job: Job, tag: string) => void }) {
+function TrackingCellRenderer(
+  params: ICellRendererParams<Job> & {
+    onToggleTag: (job: Job, tag: string) => void;
+    onShowMatching?: (job: Job) => void;
+  }
+) {
   const tags = params.data?.tags ?? [];
   const hasCv = tags.includes("CV Visto");
   const hasSeen = tags.includes("Solicitud Vista");
@@ -232,6 +238,15 @@ function TrackingCellRenderer(params: ICellRendererParams<Job> & { onToggleTag: 
       >
         <ShieldAlert className="h-4 w-4" />
       </button>
+      {params.onShowMatching && (
+        <button
+          onClick={() => params.onShowMatching!(params.data!)}
+          title="Ver datos de Matching"
+          className="p-1 rounded transition-colors text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 hover:text-amber-400"
+        >
+          <Sparkles className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
@@ -241,6 +256,7 @@ type Props = {
   data: Job[];
   onJobsChange?: (jobs: Job[]) => void;
   onShowHistory?: (job: Job) => void;
+  onShowMatching?: (job: Job) => void;
   onRowDoubleClick?: (job: Job) => void;
 };
 
@@ -312,7 +328,7 @@ function parseCsv(text: string): Record<string, string>[] {
   });
 }
 
-export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDoubleClick }: Props) {
+export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatching, onRowDoubleClick }: Props) {
   const { resolvedTheme } = useTheme();
   const { t, locale } = useLocale();
   const gridTheme = resolvedTheme === "dark" ? darkGridTheme : lightGridTheme;
@@ -686,13 +702,14 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         {
           headerName: c.tracking,
           colId: "tracking",
-          minWidth: 220,
-          maxWidth: 280,
+          minWidth: 240,
+          maxWidth: 320,
           // So CSV export includes archive/tracking tags (Archivado, CV Visto, …).
           valueGetter: (p) => (p.data?.tags ?? []).join(", "),
           cellRenderer: TrackingCellRenderer,
           cellRendererParams: {
             onToggleTag: handleToggleTag,
+            onShowMatching: onShowMatching,
           },
         },
         {
@@ -743,7 +760,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onRowDouble
         },
       ];
     },
-    [t, locale, selectedRowId, resolvedTheme, handleToggleTag, highlightedIds, toggleHighlight]
+    [t, locale, selectedRowId, resolvedTheme, handleToggleTag, highlightedIds, toggleHighlight, onShowMatching]
   );
 
   const defaultColDef = useMemo<ColDef<Job>>(
