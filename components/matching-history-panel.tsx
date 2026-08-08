@@ -43,11 +43,40 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
       console.log("[Matching Debug Panel] Local History records count:", localHistory.length);
       if (isValidUrl && localHistory.length > 0) {
         const cleanUrl = url.trim().toLowerCase();
+        
+        // Helper to extract specific job ID from common portals
+        const extractJobId = (u: string) => {
+          // LinkedIn: /view/12345 or /jobs/view/12345
+          const liMatch = u.match(/(?:view|jobs\/view)\/(\d+)/);
+          if (liMatch) return { type: 'linkedin', id: liMatch[1] };
+          
+          // InfoJobs: detail.xhtml?id=12345 or similar
+          const ijMatch = u.match(/(?:id=|_|detail\/)(of-[a-zA-Z0-9]+|\d+)/);
+          if (ijMatch) return { type: 'infojobs', id: ijMatch[1] };
+          
+          return null;
+        };
+
+        const targetIdInfo = extractJobId(cleanUrl);
+
         matches = localHistory.filter((item: any) => {
           if (!item.sourceUrl) return false;
           const itemUrl = item.sourceUrl.trim().toLowerCase();
-          const cleanItemUrl = itemUrl.split("?")[0];
-          const cleanTargetUrl = cleanUrl.split("?")[0];
+          
+          if (targetIdInfo) {
+            const itemIdInfo = extractJobId(itemUrl);
+            if (itemIdInfo && itemIdInfo.type === targetIdInfo.type) {
+              return itemIdInfo.id === targetIdInfo.id;
+            }
+          }
+          
+          // Fallback to split "?" clean url matching, but only if they are not just matching the main host
+          const cleanItemUrl = itemUrl.split("?")[0].replace(/\/$/, "");
+          const cleanTargetUrl = cleanUrl.split("?")[0].replace(/\/$/, "");
+          
+          // If the clean path is just the domain (e.g. https://es.indeed.com), do not do broad substring matching
+          if (cleanItemUrl.length < 25 || cleanTargetUrl.length < 25) return false;
+          
           return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
         });
         console.log("[Matching Debug Panel] URL filter match count:", matches.length);
