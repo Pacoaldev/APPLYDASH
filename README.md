@@ -46,6 +46,10 @@ Track your job applications with style and precision. Organize your pipeline, me
 - **CSV export & import** — Export respects active filters; import auto-detects `;`/`,` separator, Spanish column headers, and UTF-8/Windows-1252 encoding
 - **Delete confirmation** — Two-step confirmation before deleting a row to prevent accidents
 - **Keyboard shortcuts** — `N` new job, `S` save/update, `Escape` cancel
+- **Matching History Panel** — Compare any application in real-time with your historical evaluation profiles stored locally.
+- **Client-Side IndexedDB Sync** — Local storage of all matching history records, allowing instant client-side matching searches.
+- **Strict URL & ID Matching** — Robust extraction of unique Job IDs (such as LinkedIn's `/view/ID`, InfoJobs' query IDs, and Indeed's `jk` hashes) to prevent broad domain matching errors.
+- **Score-Based Recommendation Engine** — Automatic positive recommendation rules for applications scoring 4.0/5.0 or above.
 
 ### App experience
 
