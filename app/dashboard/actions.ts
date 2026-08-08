@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { ensureUserExists } from "@/lib/userService";
 import { getJobStatusHistory } from "@/lib/jobService";
 import { jobSchema, updateJobSchema } from "@/validation/jobSchema";
+import fs from "fs/promises";
+import path from "path";
 
 function parseTags(tags: string | string[] | null | undefined): string[] {
   if (!tags) return [];
@@ -234,4 +236,38 @@ export async function importJobs(rows: unknown[]) {
     imported,
     errors: errors.length ? errors : undefined,
   };
+}
+
+export async function getMatchingHistory(url: string | null, company: string | null) {
+  try {
+    const filePath = path.join(process.cwd(), "docs", "minionjobker-historial.json");
+    const fileContent = await fs.readFile(filePath, "utf-8");
+    const history = JSON.parse(fileContent);
+
+    let matches = [];
+    if (url) {
+      const cleanUrl = url.trim().toLowerCase();
+      matches = history.filter((item: any) => {
+        if (!item.sourceUrl) return false;
+        const itemUrl = item.sourceUrl.trim().toLowerCase();
+        // Match base URL without query parameters or match substring
+        const cleanItemUrl = itemUrl.split("?")[0];
+        const cleanTargetUrl = cleanUrl.split("?")[0];
+        return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
+      });
+    }
+
+    if (matches.length === 0 && company) {
+      const cleanCompany = company.trim().toLowerCase();
+      matches = history.filter((item: any) => {
+        const itemCompany = item.brief?.company?.trim().toLowerCase() || "";
+        return itemCompany === cleanCompany || cleanCompany.includes(itemCompany) || itemCompany.includes(cleanCompany);
+      });
+    }
+
+    return { success: true, data: matches };
+  } catch (error) {
+    console.error("Failed to read matching history:", error);
+    return { error: "Failed to read matching history." };
+  }
 }

@@ -98,3 +98,6 @@ deployment-logs/
 # Cache directories
 .turbo/
 .swc/
+
+# Docs
+minionjobker-historial.json

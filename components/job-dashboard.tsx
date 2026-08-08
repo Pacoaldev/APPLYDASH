@@ -9,6 +9,7 @@ import { QuickFilters } from "@/components/quick-filters";
 import { StatusHistoryPanel } from "@/components/status-history-panel";
 import { JobDetailPanel } from "@/components/job-detail-panel";
 import JobGrid from "@/components/jobGrid";
+import { MatchingHistoryPanel } from "@/components/matching-history-panel";
 import { JobKanban } from "@/components/job-kanban";
 import { useLocale } from "@/components/locale-provider";
 import { LayoutGrid, Table2, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
@@ -31,6 +32,7 @@ export function JobDashboard({ data }: Props) {
   const [view, setView] = useState<DashboardView>("table");
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
   const [detailJob, setDetailJob] = useState<Job | null>(null);
+  const [matchingJob, setMatchingJob] = useState<Job | null>(null);
   const [showStats, setShowStats] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     try { return localStorage.getItem("applydash-show-stats") === "true"; } catch { return false; }
@@ -201,6 +203,7 @@ export function JobDashboard({ data }: Props) {
           data={filteredJobs}
           onJobsChange={handleJobsChange}
           onShowHistory={setHistoryJob}
+          onShowMatching={setMatchingJob}
           onRowDoubleClick={setDetailJob}
         />
         ) : (
@@ -224,6 +227,12 @@ export function JobDashboard({ data }: Props) {
           handleJobsChange(jobs.map((j) => j.id === updated.id ? updated : j));
           setDetailJob(null);
         }}
+      />
+      <MatchingHistoryPanel
+        jobId={matchingJob?.id ?? null}
+        company={matchingJob?.company ?? null}
+        applicationLink={matchingJob?.applicationLink ?? null}
+        onClose={() => setMatchingJob(null)}
       />
     </div>
   );
