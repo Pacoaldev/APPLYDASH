@@ -238,31 +238,49 @@ export async function importJobs(rows: unknown[]) {
   };
 }
 
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents/diacritics
+    .replace(/\b(sl|s\.l\.|sa|s\.a\.|slu|s\.l\.u\.|consulting|grupo|spain|espana|s\.a\.u\.|sau)\b/gi, "") // remove common suffixes
+    .replace(/[^a-z0-9]/gi, "") // remove non-alphanumeric characters
+    .trim();
+}
+
 export async function getMatchingHistory(url: string | null, company: string | null) {
   try {
     const filePath = path.join(process.cwd(), "docs", "minionjobker-historial.json");
     const fileContent = await fs.readFile(filePath, "utf-8");
     const history = JSON.parse(fileContent);
 
+    console.log("[Matching Debug] Input URL:", url, "Input Company:", company);
+
     let matches = [];
-    if (url) {
+    const isValidUrl = url && url.trim().length > 10 && (url.includes("http") || url.includes("infojobs") || url.includes("linkedin"));
+
+    if (isValidUrl) {
       const cleanUrl = url.trim().toLowerCase();
       matches = history.filter((item: any) => {
         if (!item.sourceUrl) return false;
         const itemUrl = item.sourceUrl.trim().toLowerCase();
-        // Match base URL without query parameters or match substring
         const cleanItemUrl = itemUrl.split("?")[0];
         const cleanTargetUrl = cleanUrl.split("?")[0];
         return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
       });
+      console.log("[Matching Debug] Matches by URL count:", matches.length);
     }
 
     if (matches.length === 0 && company) {
-      const cleanCompany = company.trim().toLowerCase();
-      matches = history.filter((item: any) => {
-        const itemCompany = item.brief?.company?.trim().toLowerCase() || "";
-        return itemCompany === cleanCompany || cleanCompany.includes(itemCompany) || itemCompany.includes(cleanCompany);
-      });
+      const normTargetCompany = normalizeText(company);
+      if (normTargetCompany) {
+        matches = history.filter((item: any) => {
+          const itemCompany = item.brief?.company || "";
+          const normItemCompany = normalizeText(itemCompany);
+          return normItemCompany && (normItemCompany.includes(normTargetCompany) || normTargetCompany.includes(normItemCompany));
+        });
+        console.log("[Matching Debug] Matches by Company count:", matches.length);
+      }
     }
 
     return { success: true, data: matches };
