@@ -53,6 +53,10 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
           // InfoJobs: detail.xhtml?id=12345 or similar
           const ijMatch = u.match(/(?:id=|_|detail\/)(of-[a-zA-Z0-9]+|\d+)/);
           if (ijMatch) return { type: 'infojobs', id: ijMatch[1] };
+
+          // Indeed: jk=7e93f6fe9b6c30d5 or similar job key
+          const indMatch = u.match(/[?&]jk=([a-zA-Z0-9]+)/) || u.match(/\/viewjob.*jk=([a-zA-Z0-9]+)/);
+          if (indMatch) return { type: 'indeed', id: indMatch[1] };
           
           return null;
         };
@@ -63,19 +67,25 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
           if (!item.sourceUrl) return false;
           const itemUrl = item.sourceUrl.trim().toLowerCase();
           
-          if (targetIdInfo) {
-            const itemIdInfo = extractJobId(itemUrl);
-            if (itemIdInfo && itemIdInfo.type === targetIdInfo.type) {
+          const itemIdInfo = extractJobId(itemUrl);
+
+          if (targetIdInfo && itemIdInfo) {
+            if (itemIdInfo.type === targetIdInfo.type) {
               return itemIdInfo.id === targetIdInfo.id;
             }
+          }
+          
+          // If we successfully found a job ID on one of them but not both, or they are different types, they are NOT the same job.
+          if (targetIdInfo || itemIdInfo) {
+            return false;
           }
           
           // Fallback to split "?" clean url matching, but only if they are not just matching the main host
           const cleanItemUrl = itemUrl.split("?")[0].replace(/\/$/, "");
           const cleanTargetUrl = cleanUrl.split("?")[0].replace(/\/$/, "");
           
-          // If the clean path is just the domain (e.g. https://es.indeed.com), do not do broad substring matching
-          if (cleanItemUrl.length < 25 || cleanTargetUrl.length < 25) return false;
+          // If the clean path is just the domain (e.g. https://es.indeed.com/viewjob), do not do broad substring matching
+          if (cleanItemUrl.length < 35 || cleanTargetUrl.length < 35 || cleanItemUrl.endsWith("/viewjob") || cleanTargetUrl.endsWith("/viewjob")) return false;
           
           return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
         });
