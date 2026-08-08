@@ -209,29 +209,39 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
               {activeTab === "evaluation" && (
                 <div className="space-y-6 animate-in fade-in-50 duration-200">
                   {/* Recommendation Card */}
-                  <div className={`p-4 rounded-xl border flex gap-4 ${
-                    currentMatch.evaluation?.recommendApply 
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-                      : "bg-red-500/10 border-red-500/20 text-red-300"
-                  }`}>
-                    <div className="mt-0.5">
-                      {currentMatch.evaluation?.recommendApply ? (
-                        <CheckCircle className="h-6 w-6 text-emerald-400" />
-                      ) : (
-                        <AlertOctagon className="h-6 w-6 text-red-400" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white">
-                        {currentMatch.evaluation?.recommendApply 
-                          ? (locale === "es" ? "Se recomienda postular" : "Recommended to Apply")
-                          : (locale === "es" ? "No se recomienda postular" : "Application Not Recommended")}
-                      </h4>
-                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                        {currentMatch.evaluation?.rationale || currentMatch.evaluation?.summary}
-                      </p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const globalScore = currentMatch.evaluation?.globalScore;
+                    const recommendApply = currentMatch.evaluation?.recommendApply === true || 
+                      (typeof currentMatch.evaluation?.recommendApply === 'string' && 
+                       ['si', 'yes', 'true'].includes(currentMatch.evaluation.recommendApply.toLowerCase())) ||
+                      (typeof globalScore === 'number' && globalScore >= 4.0);
+
+                    return (
+                      <div className={`p-4 rounded-xl border flex gap-4 ${
+                        recommendApply 
+                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+                          : "bg-red-500/10 border-red-500/20 text-red-300"
+                      }`}>
+                        <div className="mt-0.5">
+                          {recommendApply ? (
+                            <CheckCircle className="h-6 w-6 text-emerald-400" />
+                          ) : (
+                            <AlertOctagon className="h-6 w-6 text-red-400" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-white">
+                            {recommendApply 
+                              ? (locale === "es" ? "Se recomienda postular" : "Recommended to Apply")
+                              : (locale === "es" ? "No se recomienda postular" : "Application Not Recommended")}
+                          </h4>
+                          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                            {currentMatch.evaluation?.rationale || currentMatch.evaluation?.summary}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Summary */}
                   {currentMatch.brief?.summary && (
