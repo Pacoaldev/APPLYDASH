@@ -99,5 +99,6 @@ deployment-logs/
 .turbo/
 .swc/
 
-# Docs
+# Docs y varios archivos
 minionjobker-historial.json
+/.agents

@@ -4,9 +4,10 @@ import { updateSession } from "@/utils/supabase/middleware";
 
 async function verifyAdminToken(token?: string) {
   if (!token) return false;
+  const secretStr = process.env.JWT_SECRET;
+  if (!secretStr) return false;
   try {
-    // Make sure to use the correct JWT secret from your environment variables
-    await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET!));
+    await jwtVerify(token, new TextEncoder().encode(secretStr));
     return true;
   } catch {
     return false;
@@ -39,35 +40,16 @@ export async function middleware(request: NextRequest) {
 
   // Handle user authentication
   const { supabaseResponse, user } = await updateSession(request);
-  
-  
-  
-//   const isAuthRoute = ["/login", "/register", "/forgot-password"].some((path) =>
-//     pathname.startsWith(path)
-//   );
 
-//   if (!user && !isAuthRoute) {
-//     return NextResponse.redirect(new URL("/login", request.url));
-//   }
-
-//   if (user && isAuthRoute) {
-//     return NextResponse.redirect(new URL("/dashboard", request.url));
-//   }
-
-//   return supabaseResponse;
-// }
-  const isPublicRoute = ["/", "/login", "/register", "/forgot-password"].some((path) =>
-    pathname.startsWith(path)
-  );
+  const publicPaths = ["/", "/login", "/register", "/forgot-password"];
+  const isPublicRoute = publicPaths.includes(pathname) ||
+    publicPaths.some((p) => p !== "/" && pathname.startsWith(p));
 
   if (!user && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Allow users to access login/register pages even if authenticated
-  // This allows them to logout and login with different accounts
-  // The forms themselves will handle the appropriate redirects after successful actions
-    return supabaseResponse;
+  return supabaseResponse;
 }
 export const config = {
   matcher: [

@@ -99,7 +99,6 @@ export const INTERVIEW_STATUSES = [
   "Phone Screen",
   "Technical Round",
   "Final Round",
-  "Negotiating",
 ];
 
 export const KANBAN_COLUMNS = [
