@@ -1,12 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
-
-const prisma = new PrismaClient();
 
 const loginSchema = z.object({
   email: z.email(),
