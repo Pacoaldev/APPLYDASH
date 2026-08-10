@@ -30,6 +30,7 @@ export function displayType(type: string | null | undefined, locale: Locale = "e
 
 export const STATUS_ES_TO_EN: Record<string, string> = {
   Aplicado: "Applied",
+  "En Proceso": "In Progress",
   Entrevista: "Interview",
   Rechazado: "Rejected",
   Pendiente: "Pending",
@@ -74,6 +75,7 @@ function hasStatus(status: string | null | undefined, candidates: readonly strin
 export const STATUS_COLORS: Record<string, { bg: string; text: string; shadow: string }> = {
   // Entry point — soft blue
   Applied:         { bg: "bg-blue-100 dark:bg-blue-900/50",       text: "text-blue-700 dark:text-blue-200",       shadow: "shadow-[0_2px_0_0_#93c5fd] dark:shadow-[0_2px_0_0_#1d4ed8]" },
+  "In Progress":   { bg: "bg-sky-100 dark:bg-sky-900/50",         text: "text-sky-700 dark:text-sky-200",         shadow: "shadow-[0_2px_0_0_#7dd3fc] dark:shadow-[0_2px_0_0_#0369a1]" },
   Pending:         { bg: "bg-slate-100 dark:bg-slate-700/60",      text: "text-slate-600 dark:text-slate-200",     shadow: "shadow-[0_2px_0_0_#94a3b8] dark:shadow-[0_2px_0_0_#475569]" },
   "Follow Up":     { bg: "bg-cyan-100 dark:bg-cyan-900/50",        text: "text-cyan-700 dark:text-cyan-200",       shadow: "shadow-[0_2px_0_0_#67e8f9] dark:shadow-[0_2px_0_0_#0e7490]" },
   // Moving forward — amber → orange progression
@@ -102,7 +104,7 @@ export const INTERVIEW_STATUSES = [
 ];
 
 export const KANBAN_COLUMNS = [
-  { key: "Applied", statuses: ["Applied", "Pending", "Follow Up"] },
+  { key: "Applied", statuses: ["Applied", "In Progress", "Pending", "Follow Up"] },
   { key: "Interview", statuses: INTERVIEW_STATUSES },
   { key: "Offer", statuses: ["Offer", "Accepted", "Negotiating"] },
   { key: "Rejected", statuses: ["Rejected", "Withdrawn", "On Hold", "Closed"] },
@@ -154,13 +156,13 @@ export function filterJobs(jobs: Job[], filter: JobFilter): Job[] {
     case "noResponse14":
       return jobs.filter(
         (j) =>
-          hasStatus(j.status, ["Applied", "Pending"]) &&
+          hasStatus(j.status, ["Applied", "In Progress", "Pending"]) &&
           (daysSince(j.appliedDate) ?? 0) >= 14
       );
     case "noResponse21":
       return jobs.filter(
         (j) =>
-          hasStatus(j.status, ["Applied", "Pending"]) &&
+          hasStatus(j.status, ["Applied", "In Progress", "Pending"]) &&
           (daysSince(j.appliedDate) ?? 0) >= 21
       );
     case "followUpDue":
@@ -186,7 +188,7 @@ export function computeStats(jobs: Job[]) {
     );
   }).length;
   const responded = jobs.filter(
-    (j) => j.status && !hasStatus(j.status, ["Applied", "Pending"])
+    (j) => j.status && !hasStatus(j.status, ["Applied", "In Progress", "Pending"])
   ).length;
   const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
   const followUpDue = jobs.filter(isFollowUpDue).length;

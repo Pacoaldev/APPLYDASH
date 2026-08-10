@@ -1,5 +1,8 @@
-import { computeStats, filterJobs, isFollowUpDue } from "./job-utils";
+import { canonicalStatus, computeStats, displayStatus, filterJobs, isFollowUpDue } from "./job-utils";
 import type { Job } from "@/types/job";
+
+if (canonicalStatus("En Proceso") !== "In Progress") throw new Error("En Proceso map mismatch");
+if (displayStatus("In Progress", "es") !== "En Proceso") throw new Error("In Progress display mismatch");
 
 // ponytail: minimal self-check — fails if filter/stats logic breaks
 const sample: Job[] = [
