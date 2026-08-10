@@ -39,6 +39,7 @@ const cellContents = {
   ],
   status: [
     "Applied",
+    "In Progress",
     "Interview",
     "Rejected",
     "Pending",
@@ -57,6 +58,7 @@ const cellContents = {
   ],
   statusEs: [
     "Aplicado",
+    "En Proceso",
     "Entrevista",
     "Rechazado",
     "Pendiente",
