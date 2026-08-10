@@ -42,6 +42,17 @@ export function JobDashboard({ data }: Props) {
     setJobs(data);
   }, [data]);
 
+  // Mobile: force table — Kanban switcher is hidden below md
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => {
+      if (mq.matches) setView("table");
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const rejectedCount = useMemo(() => 
     jobs.filter((j) => {
       const status = canonicalStatus(j.status);
@@ -135,7 +146,7 @@ export function JobDashboard({ data }: Props) {
             onChange={setFilter}
             className="mb-0"
             extra={
-              <div className="flex gap-2">
+              <>
                 <button
                   type="button"
                   onClick={() => setHideRejected((v) => {
@@ -143,7 +154,7 @@ export function JobDashboard({ data }: Props) {
                   try { localStorage.setItem("applydash-hide-rejected", String(next)); } catch {}
                   return next;
                 })}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                  className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium transition ${
                     hideRejected
                       ? "bg-red-600 text-white shadow"
                       : "bg-muted text-muted-foreground hover:bg-accent"
@@ -160,7 +171,7 @@ export function JobDashboard({ data }: Props) {
                   try { localStorage.setItem("applydash-hide-ghosted", String(next)); } catch {}
                   return next;
                 })}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                  className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium transition ${
                     hideGhosted
                       ? "bg-fuchsia-700 text-white shadow"
                       : "bg-muted text-muted-foreground hover:bg-accent"
@@ -170,10 +181,11 @@ export function JobDashboard({ data }: Props) {
                     ? `${t.dashboard.filters.showGhosted}${ghostedCount > 0 ? ` (${ghostedCount})` : ""}`
                     : t.dashboard.filters.hideGhosted}
                 </button>
-              </div>
+              </>
             }
           />
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Desktop only: Kanban is impractical on small screens */}
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setView("table")}

@@ -34,13 +34,15 @@ export function QuickFilters({ active, onChange, className = "", extra }: Props)
   };
 
   return (
-    <div className={`flex flex-wrap items-center gap-1.5 mb-4 ${className}`}>
+    <div
+      className={`flex items-center gap-1.5 mb-4 max-md:w-full max-md:min-w-0 max-md:flex-nowrap max-md:overflow-x-auto max-md:overscroll-x-contain max-md:pb-1 max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden md:flex-wrap ${className}`}
+    >
       {FILTERS.map((filter) => (
         <button
           key={filter}
           type="button"
           onClick={() => onChange(filter)}
-          className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+          className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium transition ${
             active === filter
               ? "bg-blue-600 text-white shadow"
               : "bg-muted text-muted-foreground hover:bg-accent"
@@ -49,7 +51,7 @@ export function QuickFilters({ active, onChange, className = "", extra }: Props)
           {labels[filter]}
         </button>
       ))}
-      {extra}
+      {extra ? <div className="flex shrink-0 gap-2">{extra}</div> : null}
     </div>
   );
 }
