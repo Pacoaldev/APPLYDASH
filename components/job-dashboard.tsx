@@ -239,6 +239,7 @@ export function JobDashboard({ data }: Props) {
           handleJobsChange(jobs.map((j) => j.id === updated.id ? updated : j));
           setDetailJob(null);
         }}
+        onShowMatching={setMatchingJob}
       />
       <MatchingHistoryPanel
         jobId={matchingJob?.id ?? null}
