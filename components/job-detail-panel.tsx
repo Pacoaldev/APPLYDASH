@@ -5,7 +5,7 @@ import { Job } from "@/types/job";
 import { useLocale } from "@/components/locale-provider";
 import { updateJob } from "@/app/dashboard/actions";
 import { toast } from "sonner";
-import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2, Archive, ShieldAlert } from "lucide-react";
+import { X, Save, ExternalLink, Loader2, FileText, Mail, Lock, Eye, Plus, Trash2, Archive, ShieldAlert, Sparkles } from "lucide-react";
 import { displayStatus, displayType, canonicalStatus, canonicalType } from "@/lib/job-utils";
 import cellContents from "@/data/cellContents";
 
@@ -13,9 +13,10 @@ type Props = {
   job: Job | null;
   onClose: () => void;
   onSave: (updated: Job) => void;
+  onShowMatching?: (job: Job) => void;
 };
 
-export function JobDetailPanel({ job, onClose, onSave }: Props) {
+export function JobDetailPanel({ job, onClose, onSave, onShowMatching }: Props) {
   const { t, locale } = useLocale();
   const [form, setForm] = useState<Job | null>(null);
   const [saving, setSaving] = useState(false);
@@ -112,9 +113,21 @@ export function JobDetailPanel({ job, onClose, onSave }: Props) {
             <p className="font-semibold text-base truncate">{form.company || "—"}</p>
             <p className="text-sm text-muted-foreground truncate">{form.position || "—"}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-muted transition-colors">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onShowMatching && (
+              <button
+                type="button"
+                onClick={() => onShowMatching(form)}
+                className="p-1.5 rounded hover:bg-amber-500/10 text-amber-500 hover:text-amber-400 transition-colors"
+                title="Ver datos de Matching"
+              >
+                <Sparkles className="h-4.5 w-4.5" />
+              </button>
+            )}
+            <button onClick={onClose} className="p-1.5 rounded hover:bg-muted transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body — scrollable */}
