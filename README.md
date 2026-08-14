@@ -333,9 +333,18 @@ MIT License — see [LICENSE](LICENSE).
 
 ## 📝 Changelog
 
-### August 2026 — UI Layout Fixes
+### August 2026 — UI Layout, Responsiveness & Features
 
+- **Matching History panel** — Added [MatchingHistoryPanel](file:///c:/Users/spano/Documents/PROYECTOS/APPLYDASH/components/MatchingHistoryPanel.tsx) to analyze and visualize job matching.
+- **Client-Side IndexedDB Sync** — Cached matching records in IndexedDB. Allowed instant local searches and query fallbacks.
+- **Sparkles panel shortcut** — Integrated direct matching trigger in [JobDetailPanel](file:///c:/Users/spano/Documents/PROYECTOS/APPLYDASH/components/job-detail-panel.tsx).
+- **Forced mobile table layout** — Disabled Kanban toggle below 768px in [JobDashboard](file:///c:/Users/spano/Documents/PROYECTOS/APPLYDASH/components/job-dashboard.tsx).
+- **Horizontal filter scrolling** — Enabled scrollbar-less overflow-x scrolling in [QuickFilters](file:///c:/Users/spano/Documents/PROYECTOS/APPLYDASH/components/quick-filters.tsx).
+- **In Progress status** — Implemented status tracking with localization support.
 - **Grid column resizing** — Adjusted AG Grid column constraints. Increased the tracking (Seguimiento) column width (`minWidth` to 185, `maxWidth` to 240) to prevent the 5th icon (Archivar) from being cut off. Reduced the notes (Notas) column `flex` factor from 2 to 1 to prevent it from dynamically taking up too much horizontal space.
+- **Tracking cell order** — Reordered [jobGrid](file:///c:/Users/spano/Documents/PROYECTOS/APPLYDASH/components/jobGrid.tsx) actions for better usability.
+- **Admin utilities and endpoints** — Implemented test management API endpoints. Standardized middleware and authentication routes.
+- **Simplified footer branding** — Cleaned branding logo and tagline from [footer](file:///c:/Users/spano/Documents/PROYECTOS/APPLYDASH/components/footer.tsx).
 
 ### Late July 2026 — Usability & Functionality Enhancements
 
