@@ -198,11 +198,11 @@ function TrackingCellRenderer(
   return (
     <div className="flex items-center gap-2.5 h-full" onClick={(e) => e.stopPropagation()}>
       <button
-        onClick={() => params.onToggleTag(params.data!, "CV Visto")}
-        title="CV Visto"
-        className={`p-1 rounded transition-colors ${hasCv ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+        onClick={() => params.onToggleTag(params.data!, "Carta Presentación")}
+        title="Carta Presentación"
+        className={`p-1 rounded transition-colors ${hasMail ? "text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
       >
-        <FileText className="h-4 w-4" />
+        <Mail className="h-4 w-4" />
       </button>
       <button
         onClick={() => params.onToggleTag(params.data!, "Solicitud Vista")}
@@ -212,11 +212,11 @@ function TrackingCellRenderer(
         <Eye className="h-4 w-4" />
       </button>
       <button
-        onClick={() => params.onToggleTag(params.data!, "Carta Presentación")}
-        title="Carta Presentación"
-        className={`p-1 rounded transition-colors ${hasMail ? "text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
+        onClick={() => params.onToggleTag(params.data!, "CV Visto")}
+        title="CV Visto"
+        className={`p-1 rounded transition-colors ${hasCv ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted"}`}
       >
-        <Mail className="h-4 w-4" />
+        <FileText className="h-4 w-4" />
       </button>
       <button
         onClick={() => params.onToggleTag(params.data!, "Cerrada")}
