@@ -3,7 +3,7 @@
 import { Job } from "@/types/job";
 import { computeStats } from "@/lib/job-utils";
 import { useLocale } from "@/components/locale-provider";
-import { Briefcase, TrendingUp, Users, Trophy, XCircle, Archive } from "lucide-react";
+import { Briefcase, TrendingUp, Users, Trophy, XCircle, Ghost } from "lucide-react";
 
 type Props = { jobs: Job[] };
 
@@ -17,7 +17,7 @@ export function DashboardStats({ jobs }: Props) {
     { label: t.dashboard.stats.interviewing, value: stats.interviewing, icon: Users, color: "text-amber-600" },
     { label: t.dashboard.stats.offers, value: stats.offers, icon: Trophy, color: "text-emerald-600" },
     { label: t.dashboard.stats.rejected, value: stats.rejected, icon: XCircle, color: "text-red-600" },
-    { label: t.dashboard.stats.archived, value: stats.archived, icon: Archive, color: "text-zinc-500" },
+    { label: t.dashboard.stats.ghosted, value: stats.ghosted, icon: Ghost, color: "text-fuchsia-600" },
   ];
 
   return (

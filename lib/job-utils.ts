@@ -189,17 +189,17 @@ export function computeStats(jobs: Job[]) {
     const status = canonicalStatus(j.status);
     return (
       status === "Archived" ||
-      status === "Ghosted" ||
       (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")))
     );
   }).length;
+  const ghosted = jobs.filter((j) => canonicalStatus(j.status) === "Ghosted").length;
   const responded = jobs.filter(
     (j) => j.status && !hasStatus(j.status, ["Applied", "In Progress", "Pending"])
   ).length;
   const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
   const followUpDue = jobs.filter(isFollowUpDue).length;
 
-  return { total, interviewing, offers, rejected, responseRate, followUpDue, archived };
+  return { total, interviewing, offers, rejected, responseRate, followUpDue, archived, ghosted };
 }
 
 export function formatDateDDMMYY(value: string | Date | null | undefined): string {
