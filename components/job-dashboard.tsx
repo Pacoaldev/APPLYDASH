@@ -64,7 +64,7 @@ export function JobDashboard({ data }: Props) {
   const ghostedCount = useMemo(() => 
     jobs.filter((j) => {
       const status = canonicalStatus(j.status);
-      return status === "Archived" || (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")));
+      return status === "Archived" || status === "Ghosted" || (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")));
     }).length,
     [jobs]
   );
@@ -80,7 +80,7 @@ export function JobDashboard({ data }: Props) {
     if (hideGhosted) {
       byFilter = byFilter.filter((j) => {
         const status = canonicalStatus(j.status);
-        const isArchived = status === "Archived" || (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")));
+        const isArchived = status === "Archived" || status === "Ghosted" || (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")));
         return !isArchived;
       });
     }
