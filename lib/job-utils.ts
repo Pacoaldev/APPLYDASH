@@ -182,8 +182,14 @@ export function computeStats(jobs: Job[]) {
     const status = canonicalStatus(j.status);
     return (
       status === "Rejected" ||
-      status === "Closed" ||
+      status === "Closed"
+    );
+  }).length;
+  const archived = jobs.filter((j) => {
+    const status = canonicalStatus(j.status);
+    return (
       status === "Archived" ||
+      status === "Ghosted" ||
       (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")))
     );
   }).length;
@@ -193,7 +199,7 @@ export function computeStats(jobs: Job[]) {
   const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
   const followUpDue = jobs.filter(isFollowUpDue).length;
 
-  return { total, interviewing, offers, rejected, responseRate, followUpDue };
+  return { total, interviewing, offers, rejected, responseRate, followUpDue, archived };
 }
 
 export function formatDateDDMMYY(value: string | Date | null | undefined): string {
