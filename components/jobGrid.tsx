@@ -589,7 +589,9 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
           valueGetter: "node.rowIndex + 1",
           suppressMovable: true,
           pinned: "left",
-          maxWidth: 40,
+          width: 50,
+          minWidth: 40,
+          maxWidth: 60,
           cellStyle: (p): Record<string, string> => {
             if (p.data?.id === selectedRowId) {
               const color = resolvedTheme === "dark" ? "#60A5FA" : "#087AD1";
