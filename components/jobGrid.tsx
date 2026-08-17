@@ -360,6 +360,21 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
   };
 
   useEffect(() => {
+    if (gridRef.current?.api) {
+      const currentIds: string[] = [];
+      gridRef.current.api.forEachNode((node) => {
+        if (node.data?.id) {
+          currentIds.push(node.data.id);
+        }
+      });
+      const newIds = data.map((j) => j.id);
+      const isSameList =
+        currentIds.length === newIds.length &&
+        currentIds.every((id, idx) => id === newIds[idx]);
+      if (!isSameList) {
+        gridRef.current.api.paginationGoToFirstPage();
+      }
+    }
     setRowData(data);
   }, [data]);
 
