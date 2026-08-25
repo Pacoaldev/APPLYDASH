@@ -371,8 +371,9 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
       const isSameList =
         currentIds.length === newIds.length &&
         currentIds.every((id, idx) => id === newIds[idx]);
-      if (!isSameList) {
-        gridRef.current.api.paginationGoToFirstPage();
+      // Scroll to top when the filtered set changes (no pagination — full list scrolls)
+      if (!isSameList && newIds.length > 0) {
+        gridRef.current.api.ensureIndexVisible(0);
       }
     }
     setRowData(data);
@@ -1330,7 +1331,6 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               animateRows
-              pagination
               theme={gridTheme}
               localeText={localeText}
               stopEditingWhenCellsLoseFocus
