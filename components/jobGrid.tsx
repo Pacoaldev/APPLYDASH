@@ -1331,6 +1331,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               animateRows
+              pagination={false}
               theme={gridTheme}
               localeText={localeText}
               stopEditingWhenCellsLoseFocus
