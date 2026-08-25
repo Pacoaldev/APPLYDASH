@@ -38,9 +38,6 @@ body {
 }
 
 /* ponytail: allow AG Grid horizontal scroll — hiding it truncated columns */
-.ag-paging-panel {
-  flex-wrap: wrap;
-}
 /* :root {
   --background:#ffffff;
   --foreground:  #171717;
@@ -444,21 +441,7 @@ body {
   -webkit-backdrop-filter: blur(0.3px);
 }
 
+/* Pagination disabled on job grid — keep panel hidden even if AG Grid leaves it in the DOM */
 .ag-paging-panel {
-  display: flex !important;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* hide row summary on very small screens */
-@media (max-width: 480px) {
-  .ag-paging-row-summary-panel {
-    display: none !important;
-  }
-  .ag-paging-page-summary-panel {
-    flex: 1;
-    justify-content: center;
-  }
+  display: none !important;
 }
