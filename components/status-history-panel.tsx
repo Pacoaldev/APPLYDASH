@@ -58,7 +58,7 @@ export function StatusHistoryPanel({ jobId, company, onClose }: Props) {
                       {new Date(entry.changedAt).toLocaleDateString()}
                     </span>
                     <span className="text-muted-foreground">→</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text} ${style.shadow}`}>
                       {displayStatus(entry.newStatus, locale)}
                     </span>
                   </li>

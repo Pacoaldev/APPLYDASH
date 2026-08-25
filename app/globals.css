@@ -441,7 +441,23 @@ body {
   -webkit-backdrop-filter: blur(0.3px);
 }
 
-/* Pagination disabled on job grid — keep panel hidden even if AG Grid leaves it in the DOM */
-.ag-paging-panel {
+/* Pagination disabled — AG Grid theme may still leave an empty footer (" to of " / " a de ").
+   Old CSS used display:flex !important on .ag-paging-panel, which beat AG Grid's .ag-hidden. */
+.ag-root-wrapper .ag-paging-panel,
+.ag-root-wrapper .ag-paging-panel.ag-hidden,
+.ag-paging-panel,
+.ag-paging-row-summary-panel,
+.ag-paging-page-summary-panel,
+.ag-paging-page-size,
+.ag-paging-description {
   display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
