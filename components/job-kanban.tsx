@@ -87,7 +87,7 @@ export function JobKanban({ jobs, onHistory, onJobsChange }: Props) {
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${style.bg} ${style.text}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${style.bg} ${style.text} ${style.shadow}`}>
                       {displayStatus(job.status, locale)}
                     </span>
                     {job.tags?.slice(0, 2).map((tag) => (

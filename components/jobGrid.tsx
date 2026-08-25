@@ -80,6 +80,7 @@ const lightGridTheme = themeQuartz.withParams({
   headerBackgroundColor: "#F3F4F6",
   headerFontWeight: 600,
   headerTextColor: "#374151",
+  paginationPanelHeight: 0,
   rowBorder: true,
   rowVerticalPaddingScale: 0.9,
   sidePanelBorder: true,
@@ -102,6 +103,7 @@ const darkGridTheme = themeQuartz.withParams({
   headerBackgroundColor: "#1e293b",
   headerFontWeight: 600,
   headerTextColor: "#f1f5f9",
+  paginationPanelHeight: 0,
   rowBorder: true,
   rowVerticalPaddingScale: 0.9,
   sidePanelBorder: true,
@@ -805,6 +807,10 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
   };
 
   const onGridReady = (params: any) => {
+    // Ensure paging chrome is off even after HMR / persisted grid option quirks
+    params.api.setGridOption("pagination", false);
+    params.api.setGridOption("suppressPaginationPanel", true);
+
     const storedState = localStorage.getItem("applydash-column-state");
     if (storedState) {
       try {
@@ -1326,12 +1332,14 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
         >
           <div className="w-full h-full">
             <AgGridReact
+              key="job-grid-scroll"
               ref={gridRef}
               rowData={rowData}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               animateRows
               pagination={false}
+              suppressPaginationPanel
               theme={gridTheme}
               localeText={localeText}
               stopEditingWhenCellsLoseFocus
@@ -1449,7 +1457,7 @@ export default function JobGrid({ data, onJobsChange, onShowHistory, onShowMatch
                       <Star className={`h-3.5 w-3.5 ${highlightedIds.has(job.id) ? "fill-yellow-400" : ""}`} />
                     </button>
                     <span
-                      className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${style.bg} ${style.text}`}
+                      className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${style.bg} ${style.text} ${style.shadow}`}
                     >
                       {displayStatus(job.status, locale)}
                     </span>

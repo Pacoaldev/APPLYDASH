@@ -73,27 +73,24 @@ function hasStatus(status: string | null | undefined, candidates: readonly strin
 }
 
 export const STATUS_COLORS: Record<string, { bg: string; text: string; shadow: string }> = {
-  // Entry point — soft blue
-  Applied:         { bg: "bg-blue-100 dark:bg-blue-900/50",       text: "text-blue-700 dark:text-blue-200",       shadow: "shadow-[0_2px_0_0_#93c5fd] dark:shadow-[0_2px_0_0_#1d4ed8]" },
-  "In Progress":   { bg: "bg-sky-100 dark:bg-sky-900/50",         text: "text-sky-700 dark:text-sky-200",         shadow: "shadow-[0_2px_0_0_#7dd3fc] dark:shadow-[0_2px_0_0_#0369a1]" },
-  Pending:         { bg: "bg-slate-100 dark:bg-slate-700/60",      text: "text-slate-600 dark:text-slate-200",     shadow: "shadow-[0_2px_0_0_#94a3b8] dark:shadow-[0_2px_0_0_#475569]" },
-  "Follow Up":     { bg: "bg-cyan-100 dark:bg-cyan-900/50",        text: "text-cyan-700 dark:text-cyan-200",       shadow: "shadow-[0_2px_0_0_#67e8f9] dark:shadow-[0_2px_0_0_#0e7490]" },
-  // Moving forward — amber → orange progression
-  "Phone Screen":  { bg: "bg-amber-100 dark:bg-amber-900/50",      text: "text-amber-700 dark:text-amber-200",     shadow: "shadow-[0_2px_0_0_#fcd34d] dark:shadow-[0_2px_0_0_#b45309]" },
-  Interview:       { bg: "bg-amber-200 dark:bg-amber-800/60",      text: "text-amber-800 dark:text-amber-100",     shadow: "shadow-[0_2px_0_0_#f59e0b] dark:shadow-[0_2px_0_0_#92400e]" },
-  "Technical Round":{ bg: "bg-orange-200 dark:bg-orange-800/60",   text: "text-orange-800 dark:text-orange-100",   shadow: "shadow-[0_2px_0_0_#fb923c] dark:shadow-[0_2px_0_0_#9a3412]" },
-  "Final Round":   { bg: "bg-orange-300 dark:bg-orange-700/70",    text: "text-orange-900 dark:text-orange-50",    shadow: "shadow-[0_2px_0_0_#ea580c] dark:shadow-[0_2px_0_0_#7c2d12]" },
-  Negotiating:     { bg: "bg-purple-200 dark:bg-purple-800/60",    text: "text-purple-800 dark:text-purple-100",   shadow: "shadow-[0_2px_0_0_#c084fc] dark:shadow-[0_2px_0_0_#6b21a8]" },
-  // Positive outcomes — light green → bright green
-  Offer:           { bg: "bg-green-200 dark:bg-green-800/60",      text: "text-green-800 dark:text-green-100",     shadow: "shadow-[0_2px_0_0_#4ade80] dark:shadow-[0_2px_0_0_#166534]" },
-  Accepted:        { bg: "bg-emerald-400 dark:bg-emerald-500",     text: "text-white",                             shadow: "shadow-[0_3px_0_0_#059669] dark:shadow-[0_3px_0_0_#064e3b]" },
-  // Negative outcomes — red
-  Rejected:        { bg: "bg-red-500 dark:bg-red-600",             text: "text-white",                             shadow: "shadow-[0_3px_0_0_#b91c1c] dark:shadow-[0_3px_0_0_#7f1d1d]" },
-  Withdrawn:       { bg: "bg-gray-200 dark:bg-gray-700",           text: "text-gray-600 dark:text-gray-300",       shadow: "shadow-[0_2px_0_0_#9ca3af] dark:shadow-[0_2px_0_0_#374151]" },
-  "On Hold":       { bg: "bg-slate-200 dark:bg-slate-700",         text: "text-slate-600 dark:text-slate-300",     shadow: "shadow-[0_2px_0_0_#94a3b8] dark:shadow-[0_2px_0_0_#334155]" },
-  Closed:          { bg: "bg-zinc-200 dark:bg-zinc-800",           text: "text-zinc-600 dark:text-zinc-400",       shadow: "shadow-[0_2px_0_0_#d4d4d8] dark:shadow-[0_2px_0_0_#27272a]" },
-  Ghosted:         { bg: "bg-fuchsia-100 dark:bg-fuchsia-950/40",  text: "text-fuchsia-700 dark:text-fuchsia-300", shadow: "shadow-[0_2px_0_0_#e9d5ff] dark:shadow-[0_2px_0_0_#701a75]" },
-  Archived:        { bg: "bg-zinc-100 dark:bg-zinc-800",           text: "text-zinc-500 dark:text-zinc-400",       shadow: "shadow-[0_2px_0_0_#e4e4e7] dark:shadow-[0_2px_0_0_#27272a]" },
+  // Shared 3D recipe: solid face + darker same-hue ledge (0_3px_0_0), like Rejected / Ghosted
+  Applied:          { bg: "bg-blue-100 dark:bg-blue-900/50",        text: "text-blue-700 dark:text-blue-200",       shadow: "shadow-[0_3px_0_0_#60a5fa] dark:shadow-[0_3px_0_0_#1e3a8a]" },
+  "In Progress":    { bg: "bg-sky-100 dark:bg-sky-900/50",          text: "text-sky-700 dark:text-sky-200",         shadow: "shadow-[0_3px_0_0_#38bdf8] dark:shadow-[0_3px_0_0_#0c4a6e]" },
+  Pending:          { bg: "bg-slate-200 dark:bg-slate-600",         text: "text-slate-700 dark:text-slate-100",     shadow: "shadow-[0_3px_0_0_#64748b] dark:shadow-[0_3px_0_0_#1e293b]" },
+  "Follow Up":      { bg: "bg-cyan-100 dark:bg-cyan-900/50",        text: "text-cyan-700 dark:text-cyan-200",       shadow: "shadow-[0_3px_0_0_#22d3ee] dark:shadow-[0_3px_0_0_#155e75]" },
+  "Phone Screen":   { bg: "bg-amber-100 dark:bg-amber-900/50",      text: "text-amber-700 dark:text-amber-200",     shadow: "shadow-[0_3px_0_0_#fbbf24] dark:shadow-[0_3px_0_0_#78350f]" },
+  Interview:        { bg: "bg-amber-200 dark:bg-amber-800/60",      text: "text-amber-800 dark:text-amber-100",     shadow: "shadow-[0_3px_0_0_#f59e0b] dark:shadow-[0_3px_0_0_#78350f]" },
+  "Technical Round":{ bg: "bg-orange-200 dark:bg-orange-800/60",    text: "text-orange-800 dark:text-orange-100",   shadow: "shadow-[0_3px_0_0_#fb923c] dark:shadow-[0_3px_0_0_#7c2d12]" },
+  "Final Round":    { bg: "bg-orange-300 dark:bg-orange-700/70",    text: "text-orange-900 dark:text-orange-50",    shadow: "shadow-[0_3px_0_0_#ea580c] dark:shadow-[0_3px_0_0_#7c2d12]" },
+  Negotiating:      { bg: "bg-purple-200 dark:bg-purple-800/60",    text: "text-purple-800 dark:text-purple-100",   shadow: "shadow-[0_3px_0_0_#a855f7] dark:shadow-[0_3px_0_0_#581c87]" },
+  Offer:            { bg: "bg-green-200 dark:bg-green-800/60",      text: "text-green-800 dark:text-green-100",     shadow: "shadow-[0_3px_0_0_#22c55e] dark:shadow-[0_3px_0_0_#14532d]" },
+  Accepted:         { bg: "bg-emerald-400 dark:bg-emerald-500",     text: "text-white",                             shadow: "shadow-[0_3px_0_0_#059669] dark:shadow-[0_3px_0_0_#064e3b]" },
+  Rejected:         { bg: "bg-red-500 dark:bg-red-600",             text: "text-white",                             shadow: "shadow-[0_3px_0_0_#b91c1c] dark:shadow-[0_3px_0_0_#7f1d1d]" },
+  Withdrawn:        { bg: "bg-gray-200 dark:bg-gray-600",           text: "text-gray-700 dark:text-gray-100",       shadow: "shadow-[0_3px_0_0_#6b7280] dark:shadow-[0_3px_0_0_#111827]" },
+  "On Hold":        { bg: "bg-slate-200 dark:bg-slate-600",         text: "text-slate-700 dark:text-slate-100",     shadow: "shadow-[0_3px_0_0_#64748b] dark:shadow-[0_3px_0_0_#0f172a]" },
+  Closed:           { bg: "bg-zinc-300 dark:bg-zinc-600",           text: "text-zinc-800 dark:text-zinc-100",       shadow: "shadow-[0_3px_0_0_#52525b] dark:shadow-[0_3px_0_0_#09090b]" },
+  Ghosted:          { bg: "bg-fuchsia-100 dark:bg-fuchsia-950/50",  text: "text-fuchsia-700 dark:text-fuchsia-300", shadow: "shadow-[0_3px_0_0_#c084fc] dark:shadow-[0_3px_0_0_#701a75]" },
+  Archived:         { bg: "bg-zinc-200 dark:bg-zinc-600",           text: "text-zinc-700 dark:text-zinc-200",       shadow: "shadow-[0_3px_0_0_#71717a] dark:shadow-[0_3px_0_0_#09090b]" },
 };
 
 export const INTERVIEW_STATUSES = [
@@ -112,8 +109,20 @@ export const KANBAN_COLUMNS = [
 ] as const;
 
 export function getStatusStyle(status: string | null) {
-  if (!status) return { bg: "bg-muted", text: "text-muted-foreground", shadow: "" };
-  return STATUS_COLORS[canonicalStatus(status)] ?? { bg: "bg-muted", text: "text-muted-foreground", shadow: "" };
+  if (!status) {
+    return {
+      bg: "bg-muted",
+      text: "text-muted-foreground",
+      shadow: "shadow-[0_3px_0_0_#94a3b8] dark:shadow-[0_3px_0_0_#1e293b]",
+    };
+  }
+  return (
+    STATUS_COLORS[canonicalStatus(status)] ?? {
+      bg: "bg-muted",
+      text: "text-muted-foreground",
+      shadow: "shadow-[0_3px_0_0_#94a3b8] dark:shadow-[0_3px_0_0_#1e293b]",
+    }
+  );
 }
 
 export function parseDate(value: string | null): Date | null {
