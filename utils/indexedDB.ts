@@ -25,18 +25,17 @@ export async function saveMatchingHistory(items: any[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    
-    // Clear old records first
+
     store.clear();
-    
+
     items.forEach((item) => {
-      // Ensure each item has a unique key. If item has no id, generate one.
-      if (!item.id) {
-        item.id = Math.random().toString(36).substring(2, 9);
+      const row = { ...item };
+      if (!row.id) {
+        row.id = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 11);
       }
-      store.put(item);
+      store.put(row);
     });
-    
+
     transaction.oncomplete = () => resolve();
     transaction.onerror = (event: any) => reject(event.target.error);
   });

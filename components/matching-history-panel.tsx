@@ -4,26 +4,24 @@ import { useEffect, useState } from "react";
 import { getMatchingHistory } from "@/app/dashboard/actions";
 import { useLocale } from "@/components/locale-provider";
 import { Loader2, X, Star, AlertTriangle, CheckCircle, HelpCircle, AlertOctagon, ExternalLink, ShieldCheck, FileText, MessageSquare, Award } from "lucide-react";
+import { filterHistoryMatches } from "@/lib/matching-history";
 import { getAllMatchingHistory } from "@/utils/indexedDB";
 
 type Props = {
   jobId: string | null;
   company: string | null;
+  position: string | null;
   applicationLink: string | null;
   onClose: () => void;
 };
 
-function normalizeText(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove accents/diacritics
-    .replace(/\b(sl|s\.l\.|sa|s\.a\.|slu|s\.l\.u\.|consulting|grupo|spain|espana|s\.a\.u\.|sau)\b/gi, "") // remove common suffixes
-    .replace(/[^a-z0-9]/gi, "") // remove non-alphanumeric characters
-    .trim();
-}
-
-export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose }: Props) {
+export function MatchingHistoryPanel({
+  jobId,
+  company,
+  position,
+  applicationLink,
+  onClose,
+}: Props) {
   const { locale } = useLocale();
   const [matchingData, setMatchingData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,122 +31,43 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
     if (!jobId) return;
     setLoading(true);
 
-    // Try client-side IndexedDB lookup first
-    getAllMatchingHistory().then((localHistory) => {
-      let matches: any[] = [];
-      const url = applicationLink;
+    const ctx = { applicationLink, company, position };
 
-      const isValidUrl = url && url.trim().length > 10 && (url.includes("http") || url.includes("infojobs") || url.includes("linkedin") || url.includes("indeed"));
-
-      console.log("[Matching Debug Panel] Local History records count:", localHistory.length);
-      if (isValidUrl && localHistory.length > 0) {
-        const cleanUrl = url.trim().toLowerCase();
-        
-        // Helper to extract specific job ID from common portals
-        const extractJobId = (u: string) => {
-          // LinkedIn: /view/12345 or /jobs/view/12345
-          const liMatch = u.match(/(?:view|jobs\/view)\/(\d+)/);
-          if (liMatch) return { type: 'linkedin', id: liMatch[1] };
-          
-          // InfoJobs: detail.xhtml?id=12345 or similar
-          const ijMatch = u.match(/(?:id=|_|detail\/)(of-[a-zA-Z0-9]+|\d+)/);
-          if (ijMatch) return { type: 'infojobs', id: ijMatch[1] };
-
-          // Indeed: jk=7e93f6fe9b6c30d5 or similar job key (case insensitive in URL regex)
-          const indMatch = u.match(/[?&]jk=([a-f0-9]+)/i) || u.match(/\/viewjob.*jk=([a-f0-9]+)/i);
-          if (indMatch) return { type: 'indeed', id: indMatch[1].toLowerCase() };
-          
-          return null;
-        };
-
-        const targetIdInfo = extractJobId(cleanUrl);
-
-        matches = localHistory.filter((item: any) => {
-          if (!item.sourceUrl) return false;
-          const itemUrl = item.sourceUrl.trim().toLowerCase();
-          
-          const itemIdInfo = extractJobId(itemUrl);
-
-          if (targetIdInfo && itemIdInfo) {
-            if (itemIdInfo.type === targetIdInfo.type) {
-              return itemIdInfo.id === targetIdInfo.id;
-            }
-          }
-          
-          // If we successfully found a job ID on one of them but not both, or they are different types, they are NOT the same job.
-          if (targetIdInfo || itemIdInfo) {
-            return false;
-          }
-          
-          // Fallback to split "?" clean url matching, but only if they are not just matching the main host
-          const cleanItemUrl = itemUrl.split("?")[0].replace(/\/$/, "");
-          const cleanTargetUrl = cleanUrl.split("?")[0].replace(/\/$/, "");
-          
-          // If the clean path is just the domain or Indeed's common paths, do not do broad substring matching
-          if (
-            cleanItemUrl.length < 35 || 
-            cleanTargetUrl.length < 35 || 
-            cleanItemUrl.includes("indeed.com/viewjob") || 
-            cleanTargetUrl.includes("indeed.com/viewjob") ||
-            cleanItemUrl.includes("indeed.com/rc/clk") ||
-            cleanTargetUrl.includes("indeed.com/rc/clk")
-          ) {
-            return false;
-          }
-          
-          return cleanItemUrl.includes(cleanTargetUrl) || cleanTargetUrl.includes(cleanItemUrl);
-        });
-        console.log("[Matching Debug Panel] URL filter match count:", matches.length);
-      }
-
-      if (matches.length === 0 && company && localHistory.length > 0) {
-        const normTargetCompany = normalizeText(company);
-        console.log("[Matching Debug Panel] Normalized Target Company:", normTargetCompany);
-        if (normTargetCompany) {
-          matches = localHistory.filter((item: any) => {
-            const itemCompany = item.brief?.company || "";
-            const normItemCompany = normalizeText(itemCompany);
-            console.log(`[Matching Debug Panel] Comparing itemCompany "${itemCompany}" (norm: "${normItemCompany}") with "${normTargetCompany}"`);
-            return normItemCompany && (normItemCompany.includes(normTargetCompany) || normTargetCompany.includes(normItemCompany));
-          });
+    getAllMatchingHistory()
+      .then((localHistory) => {
+        const matches = filterHistoryMatches(localHistory, ctx);
+        if (matches.length > 0) {
+          setMatchingData(matches);
+          setLoading(false);
+          return;
         }
-        console.log("[Matching Debug Panel] Company filter match count:", matches.length);
-      }
 
-      if (matches.length > 0) {
-        console.log("[Matching Debug Panel] Using matches from IndexedDB:", matches);
-        setMatchingData(matches);
-        setLoading(false);
-      } else {
-        // Fallback to Server Action if not found locally in IndexedDB
-        console.log("[Matching Debug Panel] Falling back to server getMatchingHistory with:", { applicationLink, company });
-        getMatchingHistory(applicationLink, company).then((result) => {
-          console.log("[Matching Debug Panel] Server fallback result:", result);
-          if (result.success && result.data) {
+        return getMatchingHistory(applicationLink, company, position).then(
+          (result) => {
+            if (result.success && result.data?.length) {
+              setMatchingData(result.data);
+            } else {
+              setMatchingData([]);
+            }
+            setLoading(false);
+          },
+        );
+      })
+      .catch(() => {
+        getMatchingHistory(applicationLink, company, position).then((result) => {
+          if (result.success && result.data?.length) {
             setMatchingData(result.data);
           } else {
             setMatchingData([]);
           }
           setLoading(false);
         });
-      }
-    }).catch((err) => {
-      console.error("Local matching lookup failed, falling back to server:", err);
-      getMatchingHistory(applicationLink, company).then((result) => {
-        if (result.success && result.data) {
-          setMatchingData(result.data);
-        } else {
-          setMatchingData([]);
-        }
-        setLoading(false);
       });
-    });
-  }, [jobId, applicationLink, company]);
+  }, [jobId, applicationLink, company, position]);
 
   if (!jobId) return null;
 
-  const currentMatch = matchingData[0]; // Take the first match if multiple exist
-  console.log("[Matching Debug Panel] Current Match selected:", currentMatch);
+  const currentMatch = matchingData[0];
 
   const renderStars = (score: number) => {
     return (
@@ -189,7 +108,7 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
               )}
             </div>
             <h3 className="text-lg font-bold text-white mt-1">
-              {currentMatch?.brief?.role || "Matching History"}
+              {currentMatch?.brief?.role || position || "Matching History"}
             </h3>
             <p className="text-sm text-slate-400">{company || currentMatch?.brief?.company}</p>
           </div>
@@ -217,9 +136,9 @@ export function MatchingHistoryPanel({ jobId, company, applicationLink, onClose 
                   {locale === "es" ? "No se encontraron datos de matching" : "No matching data found"}
                 </p>
                 <p className="text-xs text-slate-500 max-w-sm">
-                  {locale === "es" 
-                    ? "Este puesto no tiene un registro de matching correspondiente en el archivo local de historial."
-                    : "This position doesn't have a matching record in the local history file."}
+                  {locale === "es"
+                    ? "No hay evaluación que coincida con este enlace o puesto. Importa el historial de MinionJobker; ya no se empareja solo por empresa."
+                    : "No evaluation matches this link or role. Import MinionJobker history; company-only matching is disabled."}
                 </p>
               </div>
             </div>
