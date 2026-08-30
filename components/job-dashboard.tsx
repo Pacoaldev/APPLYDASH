@@ -244,6 +244,7 @@ export function JobDashboard({ data }: Props) {
       <MatchingHistoryPanel
         jobId={matchingJob?.id ?? null}
         company={matchingJob?.company ?? null}
+        position={matchingJob?.position ?? null}
         applicationLink={matchingJob?.applicationLink ?? null}
         onClose={() => setMatchingJob(null)}
       />
