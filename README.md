@@ -71,7 +71,6 @@ Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, **Michael Page
 ### Extension Captures
 <p float="left">
   <img alt="Extension popup" src="https://github.com/user-attachments/assets/d15fcf4f-69d9-4757-939a-dfbffe24d86d" width="45%" />
-  <img alt="Extension in action" src="https://github.com/user-attachments/assets/9690b90d-32d4-4207-bdf4-281f2ade1c83" width="45%" />
 </p>
 
 ## 🚀 Tech Stack
