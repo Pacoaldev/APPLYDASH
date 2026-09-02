@@ -1,4 +1,4 @@
-import { canonicalStatus, computeStats, displayStatus, filterJobs, getStatusStyle, isFollowUpDue, STATUS_COLORS } from "./job-utils";
+import { canonicalStatus, computeStats, displayStatus, filterJobs, getStatusStyle, isFollowUpDue, jobMatchesSearch, STATUS_COLORS } from "./job-utils";
 import type { Job } from "@/types/job";
 
 if (canonicalStatus("En Proceso") !== "In Progress") throw new Error("En Proceso map mismatch");
@@ -37,3 +37,15 @@ const stats = computeStats(sample);
 if (stats.total !== 1) throw new Error("computeStats total mismatch");
 if (filterJobs(sample, "thisWeek").length !== 1) throw new Error("filterJobs thisWeek mismatch");
 if (!isFollowUpDue(sample[0])) throw new Error("isFollowUpDue should be true for past date");
+
+const rejectedSample: Job = {
+  ...sample[0],
+  id: "2",
+  company: "Hidden Corp",
+  status: "Rechazado",
+  notes: "nota secreta",
+};
+if (!jobMatchesSearch(rejectedSample, "hidden", "es")) throw new Error("search should match hidden company");
+if (!jobMatchesSearch(rejectedSample, "rechazado", "es")) throw new Error("search should match localized status");
+if (!jobMatchesSearch(rejectedSample, "secreta", "es")) throw new Error("search should match notes");
+if (jobMatchesSearch(rejectedSample, "inexistente", "es")) throw new Error("search should not match unrelated query");
