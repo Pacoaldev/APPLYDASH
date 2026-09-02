@@ -198,12 +198,14 @@ export function JobDashboard({ data }: Props) {
           <div className="relative w-full lg:w-80 lg:max-w-md shrink-0">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              type="search"
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.dashboard.filters.searchPlaceholder}
               className="h-9 pl-9 pr-9"
               aria-label={t.dashboard.filters.searchPlaceholder}
+              autoComplete="off"
+              spellCheck={false}
             />
             {searchQuery ? (
               <button
