@@ -156,6 +156,48 @@ export function isFollowUpDue(job: Job): boolean {
   return d <= today;
 }
 
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .trim();
+}
+
+export function jobMatchesSearch(job: Job, query: string, locale: Locale = "en"): boolean {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return true;
+
+  const haystack = normalizeSearchText(
+    [
+      job.company,
+      job.position,
+      job.type,
+      displayType(job.type, "en"),
+      displayType(job.type, "es"),
+      job.platform,
+      job.location,
+      job.salary,
+      job.notes,
+      job.applicationLink,
+      job.status,
+      displayStatus(job.status, "en"),
+      displayStatus(job.status, "es"),
+      job.appliedDate,
+      job.nextFollowUpDate,
+      job.recruiterName,
+      job.recruiterEmail,
+      job.recruiterLinkedin,
+      ...(job.tags ?? []),
+      ...(job.tasks?.map((task) => task.text) ?? []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
+  return normalizedQuery.split(/\s+/).every((token) => haystack.includes(token));
+}
+
 export function filterJobs(jobs: Job[], filter: JobFilter): Job[] {
   switch (filter) {
     case "thisWeek":

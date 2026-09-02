@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Job, JobFilter, DashboardView } from "@/types/job";
-import { filterJobs, canonicalStatus } from "@/lib/job-utils";
+import { filterJobs, canonicalStatus, jobMatchesSearch } from "@/lib/job-utils";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { ActivityChart } from "@/components/activity-chart";
 import { QuickFilters } from "@/components/quick-filters";
@@ -12,8 +12,9 @@ import JobGrid from "@/components/jobGrid";
 import { MatchingHistoryPanel } from "@/components/matching-history-panel";
 import { JobKanban } from "@/components/job-kanban";
 import { useLocale } from "@/components/locale-provider";
-import { LayoutGrid, Table2, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
+import { LayoutGrid, Table2, ChevronDown, ChevronUp, BarChart3, Search, X } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { Input } from "@/components/ui/input";
 
 type Props = { data: Job[] };
 
@@ -37,6 +38,7 @@ export function JobDashboard({ data }: Props) {
     if (typeof window === "undefined") return false;
     try { return localStorage.getItem("applydash-show-stats") === "true"; } catch { return false; }
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setJobs(data);
@@ -70,22 +72,31 @@ export function JobDashboard({ data }: Props) {
   );
 
   const filteredJobs = useMemo(() => {
-    let byFilter = filterJobs(jobs, filter);
-    if (hideRejected) {
-      byFilter = byFilter.filter((j) => {
-        const status = canonicalStatus(j.status);
-        return status !== "Rejected" && status !== "Closed";
-      });
+    const query = searchQuery.trim();
+    let byFilter = query
+      ? jobs.filter((job) => jobMatchesSearch(job, query, locale))
+      : jobs;
+
+    byFilter = filterJobs(byFilter, filter);
+
+    if (!query) {
+      if (hideRejected) {
+        byFilter = byFilter.filter((j) => {
+          const status = canonicalStatus(j.status);
+          return status !== "Rejected" && status !== "Closed";
+        });
+      }
+      if (hideGhosted) {
+        byFilter = byFilter.filter((j) => {
+          const status = canonicalStatus(j.status);
+          const isArchived = status === "Archived" || (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")));
+          return !isArchived;
+        });
+      }
     }
-    if (hideGhosted) {
-      byFilter = byFilter.filter((j) => {
-        const status = canonicalStatus(j.status);
-        const isArchived = status === "Archived" || (j.tags && (j.tags.includes("Archivado") || j.tags.includes("Archived")));
-        return !isArchived;
-      });
-    }
+
     return byFilter;
-  }, [jobs, filter, hideRejected, hideGhosted]);
+  }, [jobs, filter, hideRejected, hideGhosted, searchQuery, locale]);
 
   const handleJobsChange = (updated: Job[]) => {
     const updatedMap = new Map(updated.map((j) => [j.id, j]));
@@ -140,11 +151,11 @@ export function JobDashboard({ data }: Props) {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div className="flex flex-col gap-2 mb-3 lg:flex-row lg:items-center lg:gap-3">
           <QuickFilters
             active={filter}
             onChange={setFilter}
-            className="mb-0"
+            className="mb-0 lg:flex-1 lg:min-w-0"
             extra={
               <>
                 <button
@@ -184,6 +195,32 @@ export function JobDashboard({ data }: Props) {
               </>
             }
           />
+          <div className="relative w-full lg:w-80 lg:max-w-md shrink-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t.dashboard.filters.searchPlaceholder}
+              className="h-9 pl-9 pr-9"
+              aria-label={t.dashboard.filters.searchPlaceholder}
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition"
+                aria-label={t.dashboard.filters.searchClear}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+            {searchQuery.trim() ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {t.dashboard.filters.searchResults.replace("{count}", String(filteredJobs.length))}
+              </p>
+            ) : null}
+          </div>
           {/* Desktop only: Kanban is impractical on small screens */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
