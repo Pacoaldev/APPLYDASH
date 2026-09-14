@@ -18,6 +18,30 @@
 /out/
 
 # production
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Deployment and setup docs
+DEPLOYMENT.md
+/docs/DOMAIN_SETUP.md
+
+# Workspace config
+*.code-workspace
+
+# Prisma migrations
+/prisma/migrations/
+
+# Scripts
+/scripts/
+
+# Extension
+/extension/
+
+# Screenshots
+/public/screenshots/
 /build
 
 # misc
@@ -102,3 +126,6 @@ deployment-logs/
 # Docs y varios archivos
 minionjobker-historial.json
 /.agents
+/docs/*
+.atl/
+.do/
