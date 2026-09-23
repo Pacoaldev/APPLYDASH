@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/inject-env.js && next dev --turbopack",
-    "build": "node scripts/inject-env.js && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate || true",
