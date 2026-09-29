@@ -126,6 +126,7 @@ minionjobker-historial.json
 /.agents
 /docs/*
 .atl/
+.engram/
 .do/
 
 # bypasser-ai
