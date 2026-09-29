@@ -127,3 +127,8 @@ minionjobker-historial.json
 /docs/*
 .atl/
 .do/
+
+# bypasser-ai
+.bypasser.json
+.bypasser.log
+.bypasser.state.json
