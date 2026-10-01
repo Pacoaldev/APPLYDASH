@@ -66,7 +66,14 @@ Track your job applications with style and precision. Organize your pipeline, me
 
 ### Browser extension
 
-Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, **Michael Page**, **Tecnoempleo**, **Infoempleo**, **Joppy**, and any other job site directly into your dashboard. The extension uses JSON-LD structured data first (most stable) and falls back to portal-specific DOM selectors.
+Capture job postings from **LinkedIn**, **Indeed**, **InfoJobs**, **Michael Page**, **Tecnoempleo**, **Infoempleo**, **Joppy**, and any other job site directly into your dashboard — with a single click, no copy-paste.
+
+- **On-demand capture, not crawling** — A Manifest V3 content script (`extension/content.js`) is injected into the active tab but does **nothing** until you open the popup. It never runs in the background, so there is no automatic crawling of job boards.
+- **JSON-LD first, DOM second** — Extraction prefers schema.org `JobPosting` structured data (`<script type="application/ld+json">`, including nested `@graph`), the most stable source across portals, then enriches it with portal-specific DOM selectors.
+- **Per-portal scrapers** — Dedicated extractors for LinkedIn, Indeed, InfoJobs, Michael Page, Tecnoempleo, Infoempleo and Joppy, plus a generic fallback for any other site.
+- **Robust LinkedIn extractor** — LinkedIn gets the richest fallback chain: job title/company from unified top-card selectors, then `document.title` parsing (`"Position | Company"`), then `og:title`; plus workplace type (Remote/Hybrid/Office), location, salary, and the recruiter name and profile URL from the hiring-team/poster section.
+- **Salary normalization** — Detected salaries are normalized to a consistent format (e.g. `35.000€ - 40.000€`, `$50,000 - $70,000`), including `k` suffix handling and EUR/USD/GBP detection.
+- **Auto-retry** — The popup retries scraping up to 3 times (500 ms / 1.5 s / 3 s) so single-page-app portals have time to render; any missing field can be filled in manually before saving.
 
 ### Extension Captures
 <p float="left">
@@ -192,13 +199,29 @@ Every create and status change writes a row to `job_status_history` (`oldStatus`
 
 ## 🧩 Browser extension
 
+A Chrome/Edge (Manifest V3) extension that captures the job posting on your current tab and saves it to your ApplyDash dashboard. Source lives in `extension/` (`manifest.json`, `content.js`, `popup.html`, `popup.js`, `icons/`).
+
+### How it works
+
+1. **Content script (`content.js`)** — Injected into every tab at `document_idle` (`matches: <all_urls>`), but it is completely passive: it only reacts to a `{ action: "scrape" }` message from the popup via `chrome.runtime.onMessage`. There is no background worker and no autonomous crawling.
+2. **Extraction (`scrapeJobPage`)** — Runs when the popup asks for it, in two layers:
+   - **JSON-LD** (`extractJsonLd`) — Parses `application/ld+json` scripts for a `JobPosting` node (recursing into `@graph`), reading title, `hiringOrganization`, location, employment type and `baseSalary`.
+   - **Portal-specific DOM selectors** — The hostname is matched and a dedicated scraper runs: `scrapeLinkedIn`, `scrapeIndeed`, `scrapeInfoJobs`, `scrapeMichaelPage`, `scrapeTecnoempleo`, `scrapeInfoempleo`, `scrapeJoppy`, or `scrapeGeneric` as fallback.
+   - The LinkedIn path (`scrapeLinkedIn`) additionally falls back to `document.title` → `og:title`, normalizes workplace type/location/salary, and pulls the recruiter name + LinkedIn URL from the hiring-team section.
+3. **Popup (`popup.js`)** — On open, it scrapes the active tab with **up to 3 retries** (500 ms / 1.5 s / 3 s) to let SPAs render, pre-fills the form, and lets you review/edit before saving.
+4. **Save** — Sends a `POST /api/jobs` request with `credentials: include` (session cookies) to your ApplyDash instance. `applicationLink` is taken from the current tab URL, `appliedDate` is set to today, and `nextFollowUpDate` defaults to `appliedDate + 7 days`.
+
+### Install (developer mode)
+
 1. Open `chrome://extensions` → enable **Developer mode**
 2. **Load unpacked** → select the `extension/` folder
 3. Click **Reload** (↺) on the extension after any icon or code update
 4. Log in to ApplyDash in the same browser
-5. Open a job posting → click the extension icon → **Save to ApplyDash**
+5. Open a job posting (LinkedIn, Indeed, InfoJobs, etc.) → click the extension icon → review the auto-detected fields → **Save to ApplyDash**
 
 The extension pre-fills **ApplyDash URL** with the production URL (`https://applydash.vercel.app`) automatically — no manual configuration needed. For local development, change it to `http://localhost:3000`.
+
+> ℹ️ **Note:** This is a capture-on-demand tool, not an unattended scraper. It reads the page you already have open, only when you click the extension, and never logs in to job portals on your behalf.
 
 ### Regenerating extension icons
 
